@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: billing-service
+  datasource:
+    url: ${BILLING_DB_URL:jdbc:postgresql://localhost:5432/billing_db}
+    username: ${BILLING_DB_USER:billing_user}
+    password: ${BILLING_DB_PASSWORD:change-me}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://identity-service:8101}
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://identity-service:8101/.well-known/jwks.json}
+          audiences: ${JWT_AUDIENCE:hotel-api}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:hotel}
+    password: ${RABBITMQ_PASSWORD:change-me}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+    listener:
+      simple:
+        default-requeue-rejected: false
+
+server:
+  port: ${SERVER_PORT:8109}
+  shutdown: graceful
+
+hotel:
+  billing:
+    time-zone: ${HOTEL_TIME_ZONE:Asia/Ho_Chi_Minh}
+    legal-name: ${HOTEL_LEGAL_NAME:Hotel AI}
+    legal-address: ${HOTEL_LEGAL_ADDRESS:Ho Chi Minh City, Vietnam}
+    tax-code: ${HOTEL_TAX_CODE:0000000000}
+    pdf-font-path: ${BILLING_PDF_FONT_PATH:/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf}
+    messaging:
+      exchange: ${EVENT_EXCHANGE:hotel.events}
+      reservation-queue: ${BILLING_RESERVATION_QUEUE:billing.reservation-events.v1}
+      reservation-routing-key: reservation.#.v1
+      stay-queue: ${BILLING_STAY_QUEUE:billing.stay-events.v1}
+      stay-routing-key: stay.#.v1
+      payment-queue: ${BILLING_PAYMENT_QUEUE:billing.payment-events.v1}
+      payment-routing-key: payment.#.v1
+      dead-letter-exchange: ${EVENT_DL_EXCHANGE:hotel.events.dlx}
+      dead-letter-queue: ${BILLING_DL_QUEUE:billing.events.v1.dlq}
+      dead-letter-routing-key: billing.source-events.v1.dead
+      outbox-delay-ms: 1000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

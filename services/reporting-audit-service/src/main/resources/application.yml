@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: reporting-audit-service
+  datasource:
+    url: ${REPORTING_AUDIT_DB_URL:jdbc:postgresql://postgres:5432/reporting_audit_db}
+    username: ${REPORTING_AUDIT_DB_USER:reporting_audit_user}
+    password: ${REPORTING_AUDIT_DB_PASSWORD:reporting_audit_local_password}
+  flyway:
+    enabled: true
+  rabbitmq:
+    host: ${RABBITMQ_HOST:rabbitmq}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:hotel}
+    password: ${RABBITMQ_PASSWORD:hotel_local_password}
+    listener:
+      simple:
+        default-requeue-rejected: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://identity-service:8101/.well-known/jwks.json}
+
+server:
+  port: ${SERVER_PORT:8112}
+  shutdown: graceful
+
+hotel:
+  reporting:
+    currency: ${HOTEL_CURRENCY:VND}
+    time-zone: ${HOTEL_TIME_ZONE:Asia/Ho_Chi_Minh}
+    internal-key: ${INTERNAL_SERVICE_KEY:local-internal-key}
+    max-range-days: ${REPORT_MAX_RANGE_DAYS:366}
+    audit-retention-days: ${AUDIT_RETENTION_DAYS:365}
+    messaging:
+      exchange: ${EVENT_EXCHANGE:hotel.events}
+      queue: ${REPORTING_EVENT_QUEUE:reporting-audit.domain-events.v1}
+      routing-key: ${REPORTING_EVENT_ROUTING_KEY:#}
+      dead-letter-exchange: ${EVENT_DEAD_LETTER_EXCHANGE:hotel.events.dlx}
+      dead-letter-queue: ${REPORTING_EVENT_DLQ:reporting-audit.domain-events.dlq.v1}
+      dead-letter-routing-key: ${REPORTING_EVENT_DLQ_ROUTING_KEY:reporting-audit.dead-letter.v1}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true

@@ -1,0 +1,93 @@
+spring:
+  application:
+    name: payment-service
+  datasource:
+    url: ${PAYMENT_DB_URL:jdbc:postgresql://localhost:5432/payment_db}
+    username: ${PAYMENT_DB_USER:payment_user}
+    password: ${PAYMENT_DB_PASSWORD:change-me}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://identity-service:8101}
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://identity-service:8101/.well-known/jwks.json}
+          audiences: ${JWT_AUDIENCE:hotel-api}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:hotel}
+    password: ${RABBITMQ_PASSWORD:change-me}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+    listener:
+      simple:
+        default-requeue-rejected: false
+
+server:
+  port: ${SERVER_PORT:8106}
+  shutdown: graceful
+
+hotel:
+  security:
+    internal-key: ${INTERNAL_SERVICE_KEY:change-this-internal-key}
+  payment:
+    intent-ttl: ${PAYMENT_INTENT_TTL:15m}
+    idempotency-ttl: ${PAYMENT_IDEMPOTENCY_TTL:24h}
+  messaging:
+    exchange: ${EVENT_EXCHANGE:hotel.events}
+    reservation-queue: ${RESERVATION_EVENT_QUEUE:payment.reservation-events.v1}
+    reservation-routing-key: reservation.*.v1
+    stay-queue: ${PAYMENT_STAY_EVENT_QUEUE:payment.stay-events.v1}
+    stay-routing-key: stay.*.v1
+    dead-letter-exchange: ${EVENT_DL_EXCHANGE:hotel.events.dlx}
+    dead-letter-queue: ${PAYMENT_DL_QUEUE:payment.events.v1.dlq}
+    dead-letter-routing-key: payment.reservation-events.v1.dead
+    outbox-delay-ms: 1000
+  providers:
+    momo:
+      enabled: ${MOMO_ENABLED:false}
+      endpoint: ${MOMO_ENDPOINT:https://test-payment.momo.vn/v2/gateway/api/create}
+      query-endpoint: ${MOMO_QUERY_ENDPOINT:https://test-payment.momo.vn/v2/gateway/api/query}
+      refund-endpoint: ${MOMO_REFUND_ENDPOINT:https://test-payment.momo.vn/v2/gateway/api/refund}
+      refund-query-endpoint: ${MOMO_REFUND_QUERY_ENDPOINT:https://test-payment.momo.vn/v2/gateway/api/refund/query}
+      partner-code: ${MOMO_PARTNER_CODE:}
+      access-key: ${MOMO_ACCESS_KEY:}
+      secret-key: ${MOMO_SECRET_KEY:}
+      redirect-url: ${MOMO_REDIRECT_URL:http://localhost:3000/payment/result}
+      ipn-url: ${MOMO_IPN_URL:http://localhost:8080/api/v1/payments/webhooks/momo}
+    casso:
+      enabled: ${CASSO_ENABLED:false}
+      webhook-secret: ${CASSO_WEBHOOK_SECRET:}
+      bank-id: ${CASSO_BANK_ID:}
+      account-number: ${CASSO_ACCOUNT_NUMBER:}
+      account-name: ${CASSO_ACCOUNT_NAME:}
+      qr-base-url: ${CASSO_QR_BASE_URL:https://img.vietqr.io/image}
+      qr-template: ${CASSO_QR_TEMPLATE:compact2}
+      transfer-prefix: ${CASSO_TRANSFER_PREFIX:HOTELAI}
+      time-zone: ${CASSO_TIME_ZONE:Asia/Ho_Chi_Minh}
+    sandbox:
+      enabled: ${PAYMENT_SANDBOX_ENABLED:true}
+      checkout-base-url: ${PAYMENT_SANDBOX_CHECKOUT_URL:http://localhost:8080/api/v1/payments/sandbox}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

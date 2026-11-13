@@ -1,0 +1,51 @@
+# IDE and local agent state
+.idea/
+.vscode/*.log
+.tmp/
+artifacts/
+.agents/
+.codex/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+*.p12
+*.jks
+
+# Java
+**/build/
+**/target/
+**/.classpath
+**/.project
+**/.settings/
+
+# Python
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+**/.venv/
+**/*.py[cod]
+
+# Node
+**/node_modules/
+**/.next/
+**/out/
+**/coverage/
+**/.playwright/
+**/playwright-report/
+**/test-results/
+
+# Runtime data and logs
+*.log
+data/
+uploads/
+
+# OS
+.DS_Store
+Thumbs.db

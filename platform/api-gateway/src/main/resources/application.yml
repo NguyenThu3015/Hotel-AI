@@ -1,0 +1,221 @@
+spring:
+  application:
+    name: hotel-api-gateway
+  main:
+    web-application-type: reactive
+  codec:
+    max-in-memory-size: ${GATEWAY_MAX_IN_MEMORY_SIZE:2MB}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: ${REDIS_TIMEOUT:2s}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://identity-service:8101}
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://identity-service:8101/.well-known/jwks.json}
+          audiences: ${JWT_AUDIENCE:hotel-api}
+  cloud:
+    gateway:
+      server:
+        webflux:
+          httpclient:
+            connect-timeout: ${GATEWAY_CONNECT_TIMEOUT_MS:3000}
+            response-timeout: ${GATEWAY_RESPONSE_TIMEOUT:20s}
+          default-filters:
+            - name: DedupeResponseHeader
+              args:
+                name: Access-Control-Allow-Credentials Access-Control-Allow-Origin
+                strategy: RETAIN_UNIQUE
+          routes:
+            - id: identity-auth
+              uri: ${IDENTITY_SERVICE_URL:http://identity-service:8101}
+              order: -100
+              predicates:
+                - Path=/api/v1/auth/**
+              filters:
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@authRateLimitKeyResolver}"
+                    redis-rate-limiter.replenishRate: ${AUTH_RATE_LIMIT_REPLENISH_RATE:5}
+                    redis-rate-limiter.burstCapacity: ${AUTH_RATE_LIMIT_BURST_CAPACITY:10}
+                    redis-rate-limiter.requestedTokens: 1
+                    throw-on-limit: true
+            - id: customer-me
+              uri: ${CUSTOMER_SERVICE_URL:http://customer-service:8102}
+              order: -90
+              predicates:
+                - Path=/api/v1/me,/api/v1/me/**
+            - id: identity-admin-users
+              uri: ${IDENTITY_SERVICE_URL:http://identity-service:8101}
+              order: -90
+              predicates:
+                - Path=/api/v1/admin/users,/api/v1/admin/users/**
+            - id: identity-admin-roles
+              uri: ${IDENTITY_SERVICE_URL:http://identity-service:8101}
+              order: -90
+              predicates:
+                - Path=/api/v1/admin/roles,/api/v1/admin/roles/**
+            - id: identity-admin-staff
+              uri: ${IDENTITY_SERVICE_URL:http://identity-service:8101}
+              order: -90
+              predicates:
+                - Path=/api/v1/admin/staff,/api/v1/admin/staff/**
+            - id: identity-admin-permissions
+              uri: ${IDENTITY_SERVICE_URL:http://identity-service:8101}
+              order: -90
+              predicates:
+                - Path=/api/v1/admin/permissions,/api/v1/admin/permissions/**
+            - id: customer-service
+              uri: ${CUSTOMER_SERVICE_URL:http://customer-service:8102}
+              order: -80
+              predicates:
+                - Path=/api/v1/customers,/api/v1/customers/**,/api/v1/admin/customers,/api/v1/admin/customers/**
+            - id: customer-profile
+              uri: ${CUSTOMER_SERVICE_URL:http://customer-service:8102}
+              order: -80
+              predicates:
+                - Path=/api/v1/profile,/api/v1/profile/**
+            - id: notification-service
+              uri: ${NOTIFICATION_SERVICE_URL:http://notification-service:8111}
+              order: -70
+              predicates:
+                - Path=/api/v1/notifications,/api/v1/notifications/**,/api/v1/admin/notifications,/api/v1/admin/notifications/**
+            - id: room-inventory-public
+              uri: ${ROOM_INVENTORY_SERVICE_URL:http://room-inventory-service:8103}
+              order: -65
+              predicates:
+                - Path=/api/v1/availability,/api/v1/availability/**,/api/v1/catalog/destinations,/api/v1/catalog/hotels,/api/v1/catalog/floors,/api/v1/catalog/amenities,/api/v1/catalog/room-types,/api/v1/catalog/room-types/**
+            - id: room-inventory-admin
+              uri: ${ROOM_INVENTORY_SERVICE_URL:http://room-inventory-service:8103}
+              order: -65
+              predicates:
+                - Path=/api/v1/admin/destinations,/api/v1/admin/destinations/**,/api/v1/admin/hotels,/api/v1/admin/hotels/**,/api/v1/admin/floors,/api/v1/admin/floors/**,/api/v1/admin/amenities,/api/v1/admin/amenities/**,/api/v1/admin/room-types,/api/v1/admin/room-types/**,/api/v1/admin/images,/api/v1/admin/images/**,/api/v1/admin/rooms,/api/v1/admin/rooms/**
+            - id: room-operations
+              uri: ${ROOM_INVENTORY_SERVICE_URL:http://room-inventory-service:8103}
+              order: -65
+              predicates:
+                - Path=/api/v1/housekeeping,/api/v1/housekeeping/**,/api/v1/maintenance,/api/v1/maintenance/**
+            - id: reservation-service
+              uri: ${RESERVATION_SERVICE_URL:http://reservation-service:8104}
+              order: -64
+              predicates:
+                - Path=/api/v1/reservations,/api/v1/reservations/**,/api/v1/bookings,/api/v1/bookings/**,/api/v1/admin/reservations,/api/v1/admin/reservations/**,/api/v1/admin/bookings,/api/v1/admin/bookings/**
+            - id: pricing-service
+              uri: ${PRICING_SERVICE_URL:http://pricing-service:8105}
+              order: -63
+              predicates:
+                - Path=/api/v1/admin/pricing,/api/v1/admin/pricing/**
+            - id: payment-service
+              uri: ${PAYMENT_SERVICE_URL:http://payment-service:8106}
+              order: -62
+              predicates:
+                - Path=/api/v1/payments,/api/v1/payments/**,/api/v1/admin/payments,/api/v1/admin/payments/**,/api/v1/admin/refunds,/api/v1/admin/refunds/**
+            - id: stay-service
+              uri: ${STAY_SERVICE_URL:http://stay-service:8107}
+              order: -61
+              predicates:
+                - Path=/api/v1/admin/stays,/api/v1/admin/stays/**,/api/v1/admin/stay-reservations,/api/v1/admin/stay-reservations/**
+            - id: hotel-service-catalog
+              uri: ${HOTEL_SERVICE_CATALOG_URL:http://hotel-service-catalog:8108}
+              order: -60
+              predicates:
+                - Path=/api/v1/hotel-services,/api/v1/hotel-services/**,/api/v1/admin/hotel-services,/api/v1/admin/hotel-services/**,/api/v1/admin/service-usages,/api/v1/admin/service-usages/**,/api/v1/admin/service-stays,/api/v1/admin/service-stays/**,/api/v1/service-orders,/api/v1/service-orders/**,/api/v1/admin/service-orders,/api/v1/admin/service-orders/**
+            - id: billing-service
+              uri: ${BILLING_SERVICE_URL:http://billing-service:8109}
+              order: -59
+              predicates:
+                - Path=/api/v1/admin/invoices,/api/v1/admin/invoices/**,/api/v1/admin/invoice-stays,/api/v1/admin/invoice-stays/**
+            - id: review-service
+              uri: ${REVIEW_SERVICE_URL:http://review-service:8110}
+              order: -58
+              predicates:
+                - Path=/api/v1/reviews,/api/v1/reviews/**,/api/v1/review-stays,/api/v1/review-stays/**,/api/v1/admin/reviews,/api/v1/admin/reviews/**
+            - id: reporting-audit-service
+              uri: ${REPORTING_AUDIT_SERVICE_URL:http://reporting-audit-service:8112}
+              order: -57
+              predicates:
+                - Path=/api/v1/admin/reports,/api/v1/admin/reports/**,/api/v1/admin/audit-logs,/api/v1/admin/audit-logs/**
+            - id: ai-conversation-service
+              uri: ${AI_CONVERSATION_SERVICE_URL:http://ai-conversation-service:8000}
+              order: -56
+              predicates:
+                - Path=/api/v1/ai/chat,/api/v1/ai/staff-assistant/chat,/api/v1/ai/knowledge
+              filters:
+                - StripPrefix=3
+                - PrefixPath=/api/v1
+            - id: ai-recommendation-service
+              uri: ${AI_RECOMMENDATION_SERVICE_URL:http://ai-recommendation-service:8000}
+              order: -55
+              predicates:
+                - Path=/api/v1/ai/recommendations,/api/v1/ai/recommendations/**
+              filters:
+                - StripPrefix=3
+                - PrefixPath=/api/v1
+            - id: ai-forecasting-service
+              uri: ${AI_FORECASTING_SERVICE_URL:http://ai-forecasting-service:8000}
+              order: -54
+              predicates:
+                - Path=/api/v1/ai/forecast,/api/v1/ai/forecast/**,/api/v1/ai/anomalies
+              filters:
+                - StripPrefix=3
+                - PrefixPath=/api/v1
+            - id: ai-revenue-service
+              uri: ${AI_REVENUE_SERVICE_URL:http://ai-revenue-service:8000}
+              order: -53
+              predicates:
+                - Path=/api/v1/ai/revenue,/api/v1/ai/revenue/**
+              filters:
+                - StripPrefix=3
+                - PrefixPath=/api/v1
+            - id: ai-customer-analytics-service
+              uri: ${AI_CUSTOMER_ANALYTICS_SERVICE_URL:http://ai-customer-analytics-service:8000}
+              order: -52
+              predicates:
+                - Path=/api/v1/ai/reviews/analyze,/api/v1/ai/risks,/api/v1/ai/risks/**
+              filters:
+                - StripPrefix=3
+                - PrefixPath=/api/v1
+gateway:
+  cors:
+    allowed-origin-patterns: ${GATEWAY_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:3000,http://127.0.0.1:3000}
+    allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
+    allowed-headers: Authorization,Content-Type,Idempotency-Key,X-Correlation-Id,X-Signature,X-Requested-With
+    exposed-headers: X-Correlation-Id,X-RateLimit-Remaining,X-RateLimit-Replenish-Rate,Retry-After
+    allow-credentials: true
+    max-age: 1h
+  limits:
+    max-request-size: ${GATEWAY_MAX_REQUEST_SIZE:2MB}
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+      group:
+        readiness:
+          include: readinessState,redis
+    gateway:
+      access: read-only
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  pattern:
+    level: "%5p [correlationId:%X{correlationId:-}]"
+  level:
+    com.hotel.gateway: ${GATEWAY_LOG_LEVEL:INFO}
+    org.springframework.cloud.gateway: ${SPRING_CLOUD_GATEWAY_LOG_LEVEL:INFO}

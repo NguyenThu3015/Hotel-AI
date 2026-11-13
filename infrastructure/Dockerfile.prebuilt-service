@@ -1,0 +1,9 @@
+# Repackage an already tested Spring Boot JAR without downloading Maven
+# dependencies again. Intended for low-resource local development only.
+ARG BASE_IMAGE=eclipse-temurin:21-jre
+FROM ${BASE_IMAGE}
+ARG JAR_PATH
+USER root
+COPY ${JAR_PATH} /app/app.jar
+RUN chmod 0444 /app/app.jar
+USER 10001

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.hotelai</groupId>
+    <artifactId>hotel-ai-reactor</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Hotel AI microservice reactor</name>
+
+    <modules>
+        <!-- Legacy remains in the reactor until the strangler migration is complete. -->
+        <module>backend/backend</module>
+        <module>platform/api-gateway</module>
+        <module>services/identity-service</module>
+        <module>services/customer-service</module>
+        <module>services/room-inventory-service</module>
+        <module>services/reservation-service</module>
+        <module>services/pricing-service</module>
+        <module>services/payment-service</module>
+        <module>services/stay-service</module>
+        <module>services/hotel-service-catalog</module>
+        <module>services/billing-service</module>
+        <module>services/review-service</module>
+        <module>services/notification-service</module>
+        <module>services/reporting-audit-service</module>
+    </modules>
+</project>

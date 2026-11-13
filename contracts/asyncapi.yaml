@@ -1,0 +1,901 @@
+asyncapi: 2.6.0
+info:
+  title: Hotel AI domain events
+  version: 1.0.0
+  description: >-
+    Hợp đồng sự kiện liên service. Routing key có version; consumer bắt buộc dùng inbox
+    để loại trùng theo eventId.
+defaultContentType: application/json
+servers:
+  local:
+    url: rabbitmq:5672
+    protocol: amqp
+    description: RabbitMQ trong Docker Compose
+channels:
+  identity.account.registered.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/AccountRegistered'
+  identity.account.activated.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/AccountActivated'
+  identity.staff.created.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/StaffSnapshot'
+  identity.staff.updated.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/StaffSnapshot'
+  identity.staff.status-changed.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/StaffSnapshot'
+  identity.staff.roles-changed.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/StaffSnapshot'
+  customer.profile.created.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/CustomerProfileEvent'
+  customer.profile.updated.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/CustomerProfileEvent'
+  customer.profile.merged.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/CustomerProfileEvent'
+  notification.otp.requested.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/OtpRequested'
+  identity.password.reset-requested.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/PasswordResetRequested'
+  notification.requested.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/NotificationRequested'
+  notification.delivered.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/NotificationDeliveryResult'
+  notification.failed.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/NotificationDeliveryResult'
+  inventory.floor.created.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/InventoryCatalogChanged'
+  inventory.floor.updated.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/InventoryCatalogChanged'
+  inventory.amenity.created.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/InventoryCatalogChanged'
+  inventory.amenity.updated.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/InventoryCatalogChanged'
+  inventory.room-type.created.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/RoomTypeChanged'
+  inventory.room-type.updated.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/RoomTypeChanged'
+  inventory.room-type.image-added.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/InventoryCatalogChanged'
+  inventory.room-type.image-updated.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/InventoryCatalogChanged'
+  inventory.room.created.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/InventoryCatalogChanged'
+  inventory.room.updated.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/InventoryCatalogChanged'
+  inventory.room.status-changed.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/RoomStatusChanged'
+  inventory.hold.created.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/InventoryHoldChanged'
+  inventory.hold.confirmed.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/InventoryHoldChanged'
+  inventory.hold.released.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/InventoryHoldChanged'
+  inventory.hold.expired.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/InventoryHoldChanged'
+  pricing.room-type-price-published.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/RoomTypePricePublished'
+  pricing.room-type-policy-published.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/RoomTypePolicyPublished'
+  pricing.base-rate.published.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/PricingEvent'
+  pricing.rate-rule.published.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/PricingEvent'
+  pricing.promotion.published.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/PricingEvent'
+  pricing.promotion.status-changed.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/PricingEvent'
+  pricing.promotion.redeemed.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/PricingEvent'
+  pricing.promotion.released.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/PricingEvent'
+  pricing.policy.published.v1:
+    publish:
+      message:
+        $ref: '#/components/messages/PricingEvent'
+  reservation.created.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/ReservationEvent'
+  reservation.confirmed.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/ReservationEvent'
+  reservation.changed.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/ReservationEvent'
+  reservation.change-requested.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/ReservationEvent'
+  reservation.change-rejected.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/ReservationEvent'
+  reservation.cancelled.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/ReservationEvent'
+  reservation.rejected.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/ReservationEvent'
+  reservation.hold-expired.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/ReservationEvent'
+  reservation.payment-failed.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/ReservationEvent'
+  payment.intent-created.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/PaymentEvent'
+  payment.succeeded.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/PaymentEvent'
+  payment.failed.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/PaymentEvent'
+  payment.cancelled.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/PaymentEvent'
+  payment.refund-requested.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/PaymentEvent'
+  payment.refund-approved.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/PaymentEvent'
+  payment.refund-rejected.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/PaymentEvent'
+  payment.refund-completed.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/PaymentEvent'
+  payment.refund-failed.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/PaymentEvent'
+  stay.checked-in.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/StayEvent'
+  stay.room-changed.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/StayEvent'
+  stay.extended.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/StayEvent'
+  stay.checkout-payment-pending.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/StayEvent'
+  stay.folio-updated.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/StayEvent'
+  stay.checked-out.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/StayEvent'
+  hotel-service.catalog-created.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/HotelServiceCatalogEvent'
+  hotel-service.catalog-updated.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/HotelServiceCatalogEvent'
+  hotel-service.usage-recorded.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/ServiceUsageEvent'
+  hotel-service.usage-adjusted.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/ServiceUsageEvent'
+  hotel-service.usage-performed.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/ServiceUsageEvent'
+  hotel-service.usage-cancelled.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/ServiceUsageEvent'
+  billing.invoice-issued.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/InvoiceIssued'
+  billing.invoice-correction-issued.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/InvoiceCorrectionIssued'
+  review.submitted.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/ReviewEvent'
+  review.published.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/ReviewEvent'
+  review.moderated.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/ReviewEvent'
+  review.response-upserted.v1:
+    subscribe:
+      message:
+        $ref: '#/components/messages/ReviewEvent'
+components:
+  messages:
+    AccountRegistered:
+      name: AccountRegistered
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                $ref: '#/components/schemas/AccountRegistrationPayload'
+    AccountActivated:
+      name: AccountActivated
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                $ref: '#/components/schemas/AccountPayload'
+    StaffSnapshot:
+      name: StaffSnapshot
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                $ref: '#/components/schemas/StaffSnapshotPayload'
+    OtpRequested:
+      name: OtpRequested
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                $ref: '#/components/schemas/OtpPayload'
+    PasswordResetRequested:
+      name: PasswordResetRequested
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                $ref: '#/components/schemas/OtpPayload'
+    NotificationRequested:
+      name: NotificationRequested
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                $ref: '#/components/schemas/NotificationPayload'
+    NotificationDeliveryResult:
+      name: NotificationDeliveryResult
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                type: object
+                required: [notificationId, channel, status]
+                properties:
+                  notificationId: { type: string, format: uuid }
+                  channel: { type: string, enum: [EMAIL, SMS, ZALO] }
+                  status: { type: string, enum: [DELIVERED, DEAD_LETTERED] }
+                  providerReference: { type: string }
+                  sourceEventId: { type: string }
+                  recipientIdentityId: { type: string, format: uuid }
+                  error: { type: string }
+                  attemptCount: { type: integer, minimum: 1 }
+    InventoryCatalogChanged:
+      name: InventoryCatalogChanged
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                type: object
+                additionalProperties: true
+    RoomTypeChanged:
+      name: RoomTypeChanged
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                $ref: '#/components/schemas/RoomTypePayload'
+    InventoryHoldChanged:
+      name: InventoryHoldChanged
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                $ref: '#/components/schemas/InventoryHoldPayload'
+    RoomTypePricePublished:
+      name: RoomTypePricePublished
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                $ref: '#/components/schemas/RoomTypePricePayload'
+    RoomTypePolicyPublished:
+      name: RoomTypePolicyPublished
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                $ref: '#/components/schemas/RoomTypePolicyPayload'
+    PricingEvent:
+      name: PricingEvent
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                type: object
+                additionalProperties: true
+    ReservationEvent:
+      name: ReservationEvent
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                type: object
+                required:
+                  - reservationId
+                  - customerId
+                  - contactName
+                  - contactEmail
+                  - contactPhone
+                  - status
+                  - roomTypeId
+                  - checkIn
+                  - checkOut
+                  - roomCount
+                  - adults
+                  - children
+                  - currency
+                  - subtotal
+                  - discountAmount
+                  - taxAmount
+                  - totalAmount
+                  - depositRequired
+                  - paidAmount
+                  - version
+                properties:
+                  reservationId: { type: string, format: uuid }
+                  customerId: { type: string, format: uuid }
+                  createdByIdentityId: { type: string, format: uuid }
+                  channel:
+                    type: string
+                    enum: [ONLINE, PHONE, WALK_IN, STAFF]
+                  contactName: { type: string }
+                  contactEmail: { type: string, format: email }
+                  contactPhone: { type: string }
+                  reference: { type: string }
+                  status: { type: string }
+                  roomTypeId: { type: string, format: uuid }
+                  checkIn: { type: string, format: date }
+                  checkOut: { type: string, format: date }
+                  roomCount: { type: integer, minimum: 1 }
+                  adults: { type: integer, minimum: 1 }
+                  children: { type: integer, minimum: 0 }
+                  currency: { type: string, pattern: '^[A-Z]{3}$' }
+                  subtotal: { type: number, minimum: 0 }
+                  discountAmount: { type: number, minimum: 0 }
+                  taxAmount: { type: number, minimum: 0 }
+                  totalAmount: { type: number, minimum: 0 }
+                  depositRequired: { type: number, minimum: 0 }
+                  paidAmount: { type: number, minimum: 0 }
+                  priceBreakdown:
+                    type: object
+                    additionalProperties: true
+                  createdAt: { type: string, format: date-time }
+                  updatedAt: { type: string, format: date-time }
+                  confirmedAt: { type: string, format: date-time, nullable: true }
+                  cancelledAt: { type: string, format: date-time, nullable: true }
+                  version: { type: integer, minimum: 0 }
+    PaymentEvent:
+      name: PaymentEvent
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                type: object
+                required: [paymentId, reservationId, amount, currency, status]
+                properties:
+                  paymentId: { type: string, format: uuid }
+                  reservationId: { type: string, format: uuid }
+                  customerId: { type: string, format: uuid }
+                  purpose: { type: string, enum: [DEPOSIT, FULL, BALANCE] }
+                  provider: { type: string, enum: [MOMO, SANDBOX, CASH] }
+                  amount: { type: number, minimum: 0 }
+                  currency: { type: string, pattern: '^[A-Z]{3}$' }
+                  status: { type: string }
+                  providerReference: { type: string }
+                  completedAt: { type: string, format: date-time, nullable: true }
+    StayEvent:
+      name: StayEvent
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                type: object
+                required: [stayId, reservationId, status]
+                properties:
+                  stayId: { type: string, format: uuid }
+                  reservationId: { type: string, format: uuid }
+                  customerId: { type: string, format: uuid }
+                  reservationReference: { type: string }
+                  contactName: { type: string }
+                  contactEmail: { type: string, format: email }
+                  contactPhone: { type: string }
+                  status: { type: string }
+                  scheduledCheckIn: { type: string, format: date }
+                  scheduledCheckOut: { type: string, format: date }
+                  actualCheckIn: { type: string, format: date-time, nullable: true }
+                  actualCheckOut: { type: string, format: date-time, nullable: true }
+                  roomIds:
+                    type: array
+                    items: { type: string, format: uuid }
+                  roomNumbers:
+                    type: array
+                    items: { type: string }
+                  currency: { type: string, pattern: '^[A-Z]{3}$' }
+                  chargesTotal: { type: number, minimum: 0 }
+                  paidTotal: { type: number, minimum: 0 }
+                  balance: { type: number }
+                  operationId: { type: string, format: uuid }
+                  folioEntries:
+                    type: array
+                    items:
+                      type: object
+                      required: [entryId, sourceId, type, description, amount, currency, recordedBy, recordedAt]
+                      properties:
+                        entryId: { type: string, format: uuid }
+                        sourceId: { type: string, format: uuid }
+                        type: { type: string }
+                        description: { type: string }
+                        amount: { type: number }
+                        currency: { type: string, pattern: '^[A-Z]{3}$' }
+                        recordedBy: { type: string, format: uuid }
+                        recordedAt: { type: string, format: date-time }
+    RoomStatusChanged:
+      name: RoomStatusChanged
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                type: object
+                required: [roomId, roomTypeId, previousStatus, newStatus, reason, source, version]
+                properties:
+                  roomId: { type: string, format: uuid }
+                  roomNumber: { type: string }
+                  roomTypeId: { type: string, format: uuid }
+                  previousStatus: { type: string }
+                  newStatus:
+                    type: string
+                    enum: [AVAILABLE, RESERVED, OCCUPIED, WAITING_CLEANING, MAINTENANCE]
+                  reason: { type: string }
+                  changedBy: { type: string }
+                  stayId: { type: string, format: uuid }
+                  source: { type: string }
+                  version: { type: integer, minimum: 1 }
+    HotelServiceCatalogEvent:
+      name: HotelServiceCatalogEvent
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                type: object
+                required: [serviceId, code, name, unit, active, priceVersion, unitPrice, taxRate, currency]
+                properties:
+                  serviceId: { type: string, format: uuid }
+                  code: { type: string }
+                  name: { type: string }
+                  description: { type: string }
+                  unit: { type: string }
+                  serviceDays:
+                    type: array
+                    items: { type: string }
+                  serviceStartTime: { type: string, format: time, nullable: true }
+                  serviceEndTime: { type: string, format: time, nullable: true }
+                  serviceConditions: { type: string, nullable: true }
+                  active: { type: boolean }
+                  catalogVersion: { type: integer, minimum: 0 }
+                  priceVersion: { type: integer, minimum: 1 }
+                  unitPrice: { type: number, minimum: 0 }
+                  taxRate: { type: number, minimum: 0, maximum: 1 }
+                  currency: { type: string, pattern: '^[A-Z]{3}$' }
+    ServiceUsageEvent:
+      name: ServiceUsageEvent
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                type: object
+                required: [usageId, stayId, serviceId, serviceName, quantity, unitPrice, grossAmount, deltaAmount, currency, status, revision, action, changedBy]
+                properties:
+                  usageId: { type: string, format: uuid }
+                  stayId: { type: string, format: uuid }
+                  reservationId: { type: string, format: uuid }
+                  serviceId: { type: string, format: uuid }
+                  serviceCode: { type: string }
+                  serviceName: { type: string }
+                  unit: { type: string }
+                  quantity: { type: number, exclusiveMinimum: 0 }
+                  unitPrice: { type: number, minimum: 0 }
+                  taxRate: { type: number, minimum: 0, maximum: 1 }
+                  netAmount: { type: number, minimum: 0 }
+                  taxAmount: { type: number, minimum: 0 }
+                  grossAmount: { type: number, minimum: 0 }
+                  deltaAmount: { type: number }
+                  currency: { type: string, pattern: '^[A-Z]{3}$' }
+                  occurredAt: { type: string, format: date-time }
+                  status: { type: string, enum: [PLANNED, PERFORMED, CANCELLED] }
+                  revision: { type: integer, minimum: 1 }
+                  action: { type: string, enum: [RECORDED, ADJUSTED, PERFORMED, CANCELLED] }
+                  changedBy: { type: string, format: uuid }
+    InvoiceIssued:
+      name: InvoiceIssued
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                type: object
+                required: [invoiceId, invoiceNumber, stayId, reservationId, customerId, status, totalAmount, paidAmount, balance, currency, issuedAt]
+                properties:
+                  invoiceId: { type: string, format: uuid }
+                  invoiceNumber: { type: string }
+                  stayId: { type: string, format: uuid }
+                  reservationId: { type: string, format: uuid }
+                  customerId: { type: string, format: uuid }
+                  status: { type: string, enum: [ISSUED] }
+                  totalAmount: { type: number, minimum: 0 }
+                  paidAmount: { type: number, minimum: 0 }
+                  balance: { type: number }
+                  currency: { type: string, pattern: '^[A-Z]{3}$' }
+                  issuedAt: { type: string, format: date-time }
+    InvoiceCorrectionIssued:
+      name: InvoiceCorrectionIssued
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                type: object
+                required: [invoiceId, invoiceNumber, status, correctionId, correctionNumber, correctionType, amountDelta, reason, correctionIssuedAt]
+                properties:
+                  invoiceId: { type: string, format: uuid }
+                  invoiceNumber: { type: string }
+                  stayId: { type: string, format: uuid }
+                  reservationId: { type: string, format: uuid }
+                  customerId: { type: string, format: uuid }
+                  status: { type: string, enum: [ISSUED, CANCELLED] }
+                  currency: { type: string, pattern: '^[A-Z]{3}$' }
+                  totalAmount: { type: number, minimum: 0 }
+                  correctionId: { type: string, format: uuid }
+                  correctionNumber: { type: string }
+                  correctionType: { type: string, enum: [ADJUSTMENT, CANCELLATION] }
+                  amountDelta: { type: number }
+                  reason: { type: string }
+                  correctionIssuedAt: { type: string, format: date-time }
+    CustomerProfileEvent:
+      name: CustomerProfileEvent
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                type: object
+                required: [customerId, identityId, eventType, version]
+                properties:
+                  customerId: { type: string, format: uuid }
+                  identityId: { type: string, format: uuid }
+                  eventType: { type: string }
+                  version: { type: integer, minimum: 0 }
+    ReviewEvent:
+      name: ReviewEvent
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventEnvelope'
+          - type: object
+            properties:
+              payload:
+                type: object
+                required: [reviewId, stayId, reservationId, customerId, rating, comment, topics, status, verified, moderationFlags, createdAt]
+                properties:
+                  reviewId: { type: string, format: uuid }
+                  stayId: { type: string, format: uuid }
+                  reservationId: { type: string, format: uuid }
+                  customerId: { type: string, format: uuid }
+                  reservationReference: { type: string }
+                  rating: { type: integer, minimum: 1, maximum: 5 }
+                  comment: { type: string }
+                  topics:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: string
+                      enum: [ROOM, CLEANLINESS, SERVICE, STAFF, LOCATION, VALUE, AMENITIES, OTHER]
+                  status:
+                    type: string
+                    enum: [PUBLISHED, PENDING_MODERATION, HIDDEN, REJECTED]
+                  verified: { type: boolean }
+                  moderationFlags:
+                    type: array
+                    uniqueItems: true
+                    items: { type: string }
+                  createdAt: { type: string, format: date-time }
+                  publishedAt: { type: string, format: date-time, nullable: true }
+                  moderationAction:
+                    type: string
+                    enum: [PUBLISH, HIDE, REJECT]
+                  moderationReason: { type: string }
+                  moderatedBy: { type: string, format: uuid }
+                  moderatedAt: { type: string, format: date-time }
+                  responseId: { type: string, format: uuid }
+                  responseContent: { type: string }
+                  responseRevision: { type: integer, minimum: 1 }
+                  respondedBy: { type: string, format: uuid }
+                  respondedAt: { type: string, format: date-time }
+    AccountPayload:
+      name: AccountPayload
+      payload:
+        $ref: '#/components/schemas/AccountPayload'
+  schemas:
+    EventEnvelope:
+      type: object
+      required:
+        - eventId
+        - eventType
+        - occurredAt
+        - producer
+        - aggregateType
+        - aggregateId
+        - schemaVersion
+        - payload
+      properties:
+        eventId: { type: string, format: uuid }
+        eventType: { type: string }
+        occurredAt: { type: string, format: date-time }
+        producer: { type: string }
+        correlationId: { type: string }
+        aggregateType: { type: string }
+        aggregateId: { type: string }
+        schemaVersion: { type: integer, minimum: 1 }
+        payload: { type: object }
+    AccountRegistrationPayload:
+      type: object
+      required: [identityId, email, status]
+      properties:
+        identityId: { type: string, format: uuid }
+        email: { type: string, format: email }
+        status: { type: string, enum: [PENDING_VERIFICATION] }
+        occurredAt: { type: string, format: date-time }
+    AccountPayload:
+      type: object
+      required: [identityId, email, fullName, status, emailVerified, accountType, roles]
+      properties:
+        identityId: { type: string, format: uuid }
+        email: { type: string, format: email }
+        fullName:
+          type: string
+          description: Bootstrap snapshot only; Customer Service becomes the source of truth.
+        phone:
+          type: string
+          description: Bootstrap snapshot only; Customer Service becomes the source of truth.
+        status: { type: string, enum: [PENDING_VERIFICATION, ACTIVE, LOCKED, DISABLED] }
+        emailVerified: { type: boolean }
+        accountType: { type: string, enum: [CUSTOMER, STAFF] }
+        hotelId: { type: string }
+        roles:
+          type: array
+          items: { type: string }
+        occurredAt: { type: string, format: date-time }
+    StaffSnapshotPayload:
+      allOf:
+        - $ref: '#/components/schemas/AccountPayload'
+        - type: object
+          required: [hotelId, actorId]
+          properties:
+            actorId: { type: string, format: uuid }
+    OtpPayload:
+      type: object
+      required: [challengeId, purpose, recipient, expiresAt]
+      properties:
+        challengeId: { type: string, format: uuid }
+        purpose: { type: string, enum: [ACCOUNT_ACTIVATION, PASSWORD_RESET, LOGIN_MFA] }
+        recipient: { type: string }
+        templateCode: { type: string }
+        variables:
+          type: object
+          additionalProperties: true
+        expiresAt: { type: string, format: date-time }
+    NotificationPayload:
+      type: object
+      required: [notificationId, channel, recipient, templateCode]
+      properties:
+        notificationId: { type: string, format: uuid }
+        recipientIdentityId: { type: string, format: uuid, nullable: true }
+        channel: { type: string, enum: [EMAIL, SMS, ZALO] }
+        recipient: { type: string }
+        templateCode: { type: string }
+        locale: { type: string, default: vi }
+        variables:
+          type: object
+          additionalProperties: true
+        scheduledAt: { type: string, format: date-time }
+        maxAttempts: { type: integer, minimum: 1, maximum: 10 }
+        deduplicationKey: { type: string }
+        consentRequired:
+          type: boolean
+          default: false
+          description: When true, the recipient preference for the selected channel is enforced.
+    RoomTypePayload:
+      type: object
+      required: [roomTypeId, code, name, maxAdults, maxChildren, maxOccupancy, amenityIds, published, active]
+      properties:
+        roomTypeId: { type: string, format: uuid }
+        code: { type: string }
+        name: { type: string }
+        maxAdults: { type: integer, minimum: 1 }
+        maxChildren: { type: integer, minimum: 0 }
+        maxOccupancy: { type: integer, minimum: 1 }
+        amenityIds:
+          type: array
+          items: { type: string, format: uuid }
+        published: { type: boolean }
+        active: { type: boolean }
+    InventoryHoldPayload:
+      type: object
+      required: [holdId, roomTypeId, checkIn, checkOut, quantity, status]
+      properties:
+        holdId: { type: string, format: uuid }
+        roomTypeId: { type: string, format: uuid }
+        reservationId: { type: string, format: uuid, nullable: true }
+        externalReference: { type: string, nullable: true }
+        checkIn: { type: string, format: date }
+        checkOut: { type: string, format: date }
+        quantity: { type: integer, minimum: 1 }
+        status: { type: string, enum: [HELD, CONFIRMED, RELEASED, EXPIRED] }
+        expiresAt: { type: string, format: date-time, nullable: true }
+    RoomTypePricePayload:
+      type: object
+      required: [roomTypeId, nightlyPrice, currency, taxRate, serviceFee, pricingVersion, effectiveAt]
+      properties:
+        roomTypeId: { type: string, format: uuid }
+        nightlyPrice: { type: number, minimum: 0 }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+        taxRate: { type: number, minimum: 0 }
+        serviceFee: { type: number, minimum: 0 }
+        pricingVersion: { type: integer, minimum: 1 }
+        effectiveAt: { type: string, format: date-time }
+    RoomTypePolicyPayload:
+      type: object
+      required: [roomTypeId, summary, policyVersion]
+      properties:
+        roomTypeId: { type: string, format: uuid }
+        summary: { type: string }
+        policyVersion: { type: integer, minimum: 1 }

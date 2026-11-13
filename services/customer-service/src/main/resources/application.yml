@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: customer-service
+  datasource:
+    url: ${CUSTOMER_DB_URL:jdbc:postgresql://localhost:5432/customer_db}
+    username: ${CUSTOMER_DB_USER:customer_user}
+    password: ${CUSTOMER_DB_PASSWORD:change-me}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://identity-service:8101}
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://identity-service:8101/.well-known/jwks.json}
+          audiences: ${JWT_AUDIENCE:hotel-api}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:hotel}
+    password: ${RABBITMQ_PASSWORD:change-me}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+    listener:
+      simple:
+        default-requeue-rejected: false
+
+server:
+  port: ${SERVER_PORT:8102}
+  shutdown: graceful
+
+hotel:
+  security:
+    internal-key: ${INTERNAL_SERVICE_KEY:change-this-internal-key}
+  messaging:
+    exchange: ${EVENT_EXCHANGE:hotel.events}
+    account-activated-routing-key: ${CUSTOMER_IDENTITY_ROUTING_KEY:identity.account.activated.v1}
+    account-activated-queue: ${CUSTOMER_IDENTITY_QUEUE:customer.identity.account-activated.v1}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

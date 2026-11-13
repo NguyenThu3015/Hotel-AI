@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: pricing-service
+  datasource:
+    url: ${PRICING_DB_URL:jdbc:postgresql://localhost:5432/pricing_db}
+    username: ${PRICING_DB_USER:pricing_user}
+    password: ${PRICING_DB_PASSWORD:change-me}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://identity-service:8101}
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://identity-service:8101/.well-known/jwks.json}
+          audiences: ${JWT_AUDIENCE:hotel-api}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:hotel}
+    password: ${RABBITMQ_PASSWORD:change-me}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+    listener:
+      simple:
+        default-requeue-rejected: false
+
+server:
+  port: ${SERVER_PORT:8105}
+  shutdown: graceful
+
+hotel:
+  security:
+    internal-key: ${INTERNAL_SERVICE_KEY:change-this-internal-key}
+  pricing:
+    currency: ${PRICING_CURRENCY:VND}
+    quote-ttl-minutes: ${PRICING_QUOTE_TTL_MINUTES:15}
+    minimum-nightly-rate: ${PRICING_MINIMUM_NIGHTLY_RATE:100000}
+    maximum-nightly-rate: ${PRICING_MAXIMUM_NIGHTLY_RATE:100000000}
+  messaging:
+    exchange: ${EVENT_EXCHANGE:hotel.events}
+    inventory-queue: ${PRICING_INVENTORY_QUEUE:pricing.inventory-room-types.v1}
+    inventory-routing-key: ${PRICING_INVENTORY_ROUTING_KEY:inventory.room-type.#}
+    dead-letter-exchange: ${PRICING_DLX:hotel.events.dlx}
+    dead-letter-queue: ${PRICING_DLQ:pricing.inventory-room-types.dlq.v1}
+    dead-letter-routing-key: ${PRICING_DLQ_ROUTING_KEY:pricing.inventory-room-types.dead}
+    outbox-delay-ms: ${OUTBOX_DELAY_MS:1000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

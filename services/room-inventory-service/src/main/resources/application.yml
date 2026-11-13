@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: room-inventory-service
+  datasource:
+    url: ${ROOM_INVENTORY_DB_URL:jdbc:postgresql://localhost:5432/room_inventory_db}
+    username: ${ROOM_INVENTORY_DB_USER:room_inventory_user}
+    password: ${ROOM_INVENTORY_DB_PASSWORD:change-me}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://identity-service:8101}
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://identity-service:8101/.well-known/jwks.json}
+          audiences: ${JWT_AUDIENCE:hotel-api}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:hotel}
+    password: ${RABBITMQ_PASSWORD:change-me}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+    listener:
+      simple:
+        default-requeue-rejected: false
+        acknowledge-mode: auto
+
+server:
+  port: ${SERVER_PORT:8103}
+  shutdown: graceful
+
+hotel:
+  security:
+    internal-key: ${INTERNAL_SERVICE_KEY:change-this-internal-key}
+  inventory:
+    default-hold-minutes: ${INVENTORY_HOLD_MINUTES:15}
+    max-search-nights: ${INVENTORY_MAX_SEARCH_NIGHTS:90}
+  messaging:
+    exchange: ${EVENT_EXCHANGE:hotel.events}
+    dead-letter-exchange: ${DEAD_LETTER_EXCHANGE:hotel.events.dlx}
+    pricing-queue: ${PRICING_SNAPSHOT_QUEUE:inventory.pricing-snapshots.v1}
+    outbox-delay-ms: ${OUTBOX_DELAY_MS:1000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

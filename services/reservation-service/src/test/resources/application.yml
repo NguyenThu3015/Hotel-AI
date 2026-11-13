@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:reservation;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: false
+  task:
+    scheduling:
+      enabled: false
+hotel:
+  security:
+    internal-key: test-internal-key
+  clients:
+    inventory-url: http://localhost:9991
+    pricing-url: http://localhost:9992
+  reservation:
+    hold-duration: 15m
+    maximum-stay-nights: 60
+    change-cutoff: 24h
+  messaging:
+    exchange: hotel.events
+    payment-queue: reservation.payment-events.test
+    payment-routing-key: payment.*.v1
+    stay-queue: reservation.stay-events.test
+    stay-routing-key: stay.*.v1

@@ -1,0 +1,818 @@
+name: hotel-ai-microservices
+
+x-java-service: &java-service
+  restart: "${RESTART_POLICY:-on-failure:3}"
+  cpus: "${JAVA_SERVICE_CPUS:-0.50}"
+  mem_limit: "${JAVA_SERVICE_MEMORY_LIMIT:-512m}"
+  mem_reservation: "${JAVA_SERVICE_MEMORY_RESERVATION:-256m}"
+  pids_limit: 256
+  networks: [hotel-network]
+  environment: &java-common-env
+    SPRING_RABBITMQ_HOST: rabbitmq
+    SPRING_RABBITMQ_PORT: 5672
+    SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-hotel_local}
+    SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-hotel_local_password}
+    RABBITMQ_HOST: rabbitmq
+    RABBITMQ_PORT: 5672
+    RABBITMQ_USER: ${RABBITMQ_USER:-hotel_local}
+    RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-hotel_local_password}
+    SPRING_DATA_REDIS_HOST: redis
+    SPRING_DATA_REDIS_PORT: 6379
+    SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_local_password}
+    # Keep the aggregate connection count of all local microservices below
+    # PostgreSQL's default max_connections=100.
+    SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 5
+    SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 1
+    SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: 30000
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_local_password}
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+    MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "${TRACING_SAMPLING_PROBABILITY:-0.05}"
+    MANAGEMENT_TRACING_ENABLED: "${MANAGEMENT_TRACING_ENABLED:-false}"
+    JAVA_TOOL_OPTIONS: >-
+      -XX:ActiveProcessorCount=${JAVA_ACTIVE_PROCESSOR_COUNT:-2}
+      -XX:InitialRAMPercentage=${JAVA_INITIAL_RAM_PERCENTAGE:-10}
+      -XX:MaxRAMPercentage=${JAVA_MAX_RAM_PERCENTAGE:-50}
+      -XX:MaxMetaspaceSize=${JAVA_MAX_METASPACE_SIZE:-128m}
+      -XX:+UseSerialGC
+    INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-local-internal-service-key-change-me}
+
+x-ai-service: &ai-service
+  image: hotel-ai-service:local
+  restart: "${RESTART_POLICY:-on-failure:3}"
+  cpus: "${AI_SERVICE_CPUS:-0.35}"
+  mem_limit: "${AI_SERVICE_MEMORY_LIMIT:-256m}"
+  mem_reservation: "${AI_SERVICE_MEMORY_RESERVATION:-96m}"
+  pids_limit: 128
+  networks: [hotel-network]
+  healthcheck:
+    test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+    interval: 15s
+    timeout: 3s
+    retries: 20
+  environment: &ai-common-env
+    BACKEND_URL: http://api-gateway:8080/api/v1
+    AI_PROVIDER: ${AI_PROVIDER:-auto}
+    GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    GEMINI_CHAT_MODEL: ${GEMINI_CHAT_MODEL:-gemini-3.1-flash-lite}
+    GEMINI_EMBEDDING_MODEL: ${GEMINI_EMBEDDING_MODEL:-gemini-embedding-2}
+    OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    OPENAI_CHAT_MODEL: ${OPENAI_CHAT_MODEL:-gpt-5.4-mini}
+    OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+    JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+    JWT_ISSUER: http://identity-service:8101
+    JWT_AUDIENCE: hotel-api
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    restart: "${RESTART_POLICY:-on-failure:3}"
+    cpus: "${POSTGRES_CPUS:-1.00}"
+    mem_limit: "${POSTGRES_MEMORY_LIMIT:-768m}"
+    mem_reservation: "${POSTGRES_MEMORY_RESERVATION:-256m}"
+    pids_limit: 256
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: hotel_admin
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-hotel_admin_local_password}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - microservice_postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hotel_admin -d postgres"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    networks: [hotel-network]
+
+  rabbitmq:
+    image: rabbitmq:4.1-management-alpine
+    restart: "${RESTART_POLICY:-on-failure:3}"
+    cpus: "${RABBITMQ_CPUS:-1.00}"
+    mem_limit: "${RABBITMQ_MEMORY_LIMIT:-512m}"
+    mem_reservation: "${RABBITMQ_MEMORY_RESERVATION:-192m}"
+    pids_limit: 256
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-hotel_local}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-hotel_local_password}
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "+S 2:2 +sbwt none +sbwtdcpu none +sbwtdio none"
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    networks: [hotel-network]
+
+  redis:
+    image: redis:7.4-alpine
+    restart: "${RESTART_POLICY:-on-failure:3}"
+    cpus: "${REDIS_CPUS:-0.25}"
+    mem_limit: "${REDIS_MEMORY_LIMIT:-128m}"
+    mem_reservation: "${REDIS_MEMORY_RESERVATION:-32m}"
+    pids_limit: 64
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - ${REDIS_PASSWORD:-redis_local_password}
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - microservice_redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_local_password}
+    networks: [hotel-network]
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    restart: "${RESTART_POLICY:-on-failure:3}"
+    cpus: "${MAILPIT_CPUS:-0.25}"
+    mem_limit: "${MAILPIT_MEMORY_LIMIT:-128m}"
+    mem_reservation: "${MAILPIT_MEMORY_RESERVATION:-32m}"
+    pids_limit: 64
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8025/api/v1/messages"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    networks: [hotel-network]
+
+  api-gateway:
+    <<: *java-service
+    build:
+      context: ../platform/api-gateway
+    environment:
+      <<: *java-common-env
+      SERVER_PORT: 8080
+      IDENTITY_SERVICE_URL: http://identity-service:8101
+      CUSTOMER_SERVICE_URL: http://customer-service:8102
+      ROOM_INVENTORY_SERVICE_URL: http://room-inventory-service:8103
+      RESERVATION_SERVICE_URL: http://reservation-service:8104
+      PRICING_SERVICE_URL: http://pricing-service:8105
+      PAYMENT_SERVICE_URL: http://payment-service:8106
+      STAY_SERVICE_URL: http://stay-service:8107
+      HOTEL_SERVICE_CATALOG_URL: http://hotel-service-catalog:8108
+      BILLING_SERVICE_URL: http://billing-service:8109
+      REVIEW_SERVICE_URL: http://review-service:8110
+      NOTIFICATION_SERVICE_URL: http://notification-service:8111
+      REPORTING_AUDIT_SERVICE_URL: http://reporting-audit-service:8112
+      AI_CONVERSATION_SERVICE_URL: http://ai-conversation-service:8000
+      AI_RECOMMENDATION_SERVICE_URL: http://ai-recommendation-service:8000
+      AI_FORECASTING_SERVICE_URL: http://ai-forecasting-service:8000
+      AI_REVENUE_SERVICE_URL: http://ai-revenue-service:8000
+      AI_CUSTOMER_ANALYTICS_SERVICE_URL: http://ai-customer-analytics-service:8000
+      JWT_ISSUER: http://identity-service:8101
+      JWT_ISSUER_URI: http://identity-service:8101
+      JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+      GATEWAY_CORS_ALLOWED_ORIGIN_PATTERNS: http://localhost:3000,http://127.0.0.1:3000
+    ports:
+      - "${GATEWAY_PORT:-8081}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 15s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      redis:
+        condition: service_healthy
+      identity-service:
+        condition: service_healthy
+      customer-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+      room-inventory-service:
+        condition: service_healthy
+      reservation-service:
+        condition: service_healthy
+      pricing-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+      stay-service:
+        condition: service_healthy
+      hotel-service-catalog:
+        condition: service_healthy
+      billing-service:
+        condition: service_healthy
+      review-service:
+        condition: service_healthy
+      reporting-audit-service:
+        condition: service_healthy
+      ai-conversation-service:
+        condition: service_healthy
+      ai-recommendation-service:
+        condition: service_healthy
+      ai-forecasting-service:
+        condition: service_healthy
+      ai-revenue-service:
+        condition: service_healthy
+      ai-customer-analytics-service:
+        condition: service_healthy
+
+  identity-service:
+    <<: *java-service
+    build:
+      context: ../services/identity-service
+    environment:
+      <<: *java-common-env
+      SERVER_PORT: 8101
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/identity_db
+      SPRING_DATASOURCE_USERNAME: identity_user
+      SPRING_DATASOURCE_PASSWORD: identity_local_password
+      JWT_ISSUER: http://identity-service:8101
+      JWT_AUDIENCE: hotel-api
+      JWT_KEY_ID: ${JWT_KEY_ID:-identity-local-persistent-v1}
+      JWT_PRIVATE_KEY_LOCATION: ${JWT_PRIVATE_KEY_LOCATION:-file:/app/keys/private.pem}
+      JWT_PUBLIC_KEY_LOCATION: ${JWT_PUBLIC_KEY_LOCATION:-file:/app/keys/public.pem}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-admin@hotelai.local}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-Admin@12345}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8101/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 15s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      customer-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+    volumes:
+      - identity_jwt_keys:/app/keys
+
+  customer-service:
+    <<: *java-service
+    build:
+      context: ../services/customer-service
+    environment:
+      <<: *java-common-env
+      SERVER_PORT: 8102
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/customer_db
+      SPRING_DATASOURCE_USERNAME: customer_user
+      SPRING_DATASOURCE_PASSWORD: customer_local_password
+      JWT_ISSUER: http://identity-service:8101
+      JWT_ISSUER_URI: http://identity-service:8101
+      JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+      JWT_AUDIENCE: hotel-api
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8102/actuator/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  room-inventory-service:
+    <<: *java-service
+    build:
+      context: ../services/room-inventory-service
+    environment:
+      <<: *java-common-env
+      SERVER_PORT: 8103
+      ROOM_INVENTORY_DB_URL: jdbc:postgresql://postgres:5432/inventory_db
+      ROOM_INVENTORY_DB_USER: inventory_user
+      ROOM_INVENTORY_DB_PASSWORD: inventory_local_password
+      JWT_ISSUER_URI: http://identity-service:8101
+      JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+      JWT_AUDIENCE: hotel-api
+      EVENT_EXCHANGE: ${EVENT_EXCHANGE:-hotel.events}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8103/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 15s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  pricing-service:
+    <<: *java-service
+    build:
+      context: ../services/pricing-service
+    environment:
+      <<: *java-common-env
+      SERVER_PORT: 8105
+      PRICING_DB_URL: jdbc:postgresql://postgres:5432/pricing_db
+      PRICING_DB_USER: pricing_user
+      PRICING_DB_PASSWORD: pricing_local_password
+      JWT_ISSUER_URI: http://identity-service:8101
+      JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+      JWT_AUDIENCE: hotel-api
+      EVENT_EXCHANGE: ${EVENT_EXCHANGE:-hotel.events}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8105/actuator/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  reservation-service:
+    <<: *java-service
+    build:
+      context: ../services/reservation-service
+    environment:
+      <<: *java-common-env
+      SERVER_PORT: 8104
+      RESERVATION_DB_URL: jdbc:postgresql://postgres:5432/reservation_db
+      RESERVATION_DB_USER: reservation_user
+      RESERVATION_DB_PASSWORD: reservation_local_password
+      JWT_ISSUER_URI: http://identity-service:8101
+      JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+      JWT_AUDIENCE: hotel-api
+      INVENTORY_SERVICE_URL: http://room-inventory-service:8103
+      PRICING_SERVICE_URL: http://pricing-service:8105
+      EVENT_EXCHANGE: ${EVENT_EXCHANGE:-hotel.events}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8104/actuator/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      room-inventory-service:
+        condition: service_healthy
+      pricing-service:
+        condition: service_healthy
+
+  payment-service:
+    <<: *java-service
+    build:
+      context: ../services/payment-service
+    environment:
+      <<: *java-common-env
+      SERVER_PORT: 8106
+      PAYMENT_DB_URL: jdbc:postgresql://postgres:5432/payment_db
+      PAYMENT_DB_USER: payment_user
+      PAYMENT_DB_PASSWORD: payment_local_password
+      JWT_ISSUER_URI: http://identity-service:8101
+      JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+      JWT_AUDIENCE: hotel-api
+      EVENT_EXCHANGE: ${EVENT_EXCHANGE:-hotel.events}
+      PAYMENT_SANDBOX_ENABLED: ${PAYMENT_SANDBOX_ENABLED:-true}
+      PAYMENT_SANDBOX_CHECKOUT_URL: http://localhost:${GATEWAY_PORT:-8081}/api/v1/payments/sandbox
+      MOMO_ENABLED: ${MOMO_ENABLED:-false}
+      MOMO_ENDPOINT: ${MOMO_ENDPOINT:-https://test-payment.momo.vn/v2/gateway/api/create}
+      MOMO_QUERY_ENDPOINT: ${MOMO_QUERY_ENDPOINT:-https://test-payment.momo.vn/v2/gateway/api/query}
+      MOMO_REFUND_ENDPOINT: ${MOMO_REFUND_ENDPOINT:-https://test-payment.momo.vn/v2/gateway/api/refund}
+      MOMO_REFUND_QUERY_ENDPOINT: ${MOMO_REFUND_QUERY_ENDPOINT:-https://test-payment.momo.vn/v2/gateway/api/refund/query}
+      MOMO_PARTNER_CODE: ${MOMO_PARTNER_CODE:-}
+      MOMO_ACCESS_KEY: ${MOMO_ACCESS_KEY:-}
+      MOMO_SECRET_KEY: ${MOMO_SECRET_KEY:-}
+      MOMO_REDIRECT_URL: ${MOMO_REDIRECT_URL:-http://localhost:3000/payment/result}
+      MOMO_IPN_URL: ${MOMO_IPN_URL:-http://localhost:8081/api/v1/payments/webhooks/momo}
+      CASSO_ENABLED: ${CASSO_ENABLED:-false}
+      CASSO_WEBHOOK_SECRET: ${CASSO_WEBHOOK_SECRET:-}
+      CASSO_BANK_ID: ${CASSO_BANK_ID:-}
+      CASSO_ACCOUNT_NUMBER: ${CASSO_ACCOUNT_NUMBER:-}
+      CASSO_ACCOUNT_NAME: ${CASSO_ACCOUNT_NAME:-}
+      CASSO_QR_BASE_URL: ${CASSO_QR_BASE_URL:-https://img.vietqr.io/image}
+      CASSO_QR_TEMPLATE: ${CASSO_QR_TEMPLATE:-compact2}
+      CASSO_TRANSFER_PREFIX: ${CASSO_TRANSFER_PREFIX:-HOTELAI}
+      CASSO_TIME_ZONE: ${CASSO_TIME_ZONE:-Asia/Ho_Chi_Minh}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8106/actuator/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  stay-service:
+    <<: *java-service
+    build:
+      context: ../services/stay-service
+    environment:
+      <<: *java-common-env
+      SERVER_PORT: 8107
+      STAY_DB_URL: jdbc:postgresql://postgres:5432/stay_db
+      STAY_DB_USER: stay_user
+      STAY_DB_PASSWORD: stay_local_password
+      JWT_ISSUER_URI: http://identity-service:8101
+      JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+      JWT_AUDIENCE: hotel-api
+      INVENTORY_SERVICE_URL: http://room-inventory-service:8103
+      EVENT_EXCHANGE: ${EVENT_EXCHANGE:-hotel.events}
+      STAY_DOCUMENT_ENCRYPTION_KEY: ${STAY_DOCUMENT_ENCRYPTION_KEY:-MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=}
+      HOTEL_TIME_ZONE: ${HOTEL_TIME_ZONE:-Asia/Ho_Chi_Minh}
+      HOTEL_CHECK_IN_HOUR: ${HOTEL_CHECK_IN_HOUR:-14}
+      HOTEL_CHILD_MAX_AGE: ${HOTEL_CHILD_MAX_AGE:-11}
+      HOTEL_PRIMARY_GUEST_MIN_AGE: ${HOTEL_PRIMARY_GUEST_MIN_AGE:-18}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8107/actuator/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      room-inventory-service:
+        condition: service_healthy
+
+  hotel-service-catalog:
+    <<: *java-service
+    build:
+      context: ../services/hotel-service-catalog
+    environment:
+      <<: *java-common-env
+      SERVER_PORT: 8108
+      SERVICE_CATALOG_DB_URL: jdbc:postgresql://postgres:5432/service_catalog_db
+      SERVICE_CATALOG_DB_USER: service_catalog_user
+      SERVICE_CATALOG_DB_PASSWORD: service_catalog_local_password
+      JWT_ISSUER_URI: http://identity-service:8101
+      JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+      JWT_AUDIENCE: hotel-api
+      EVENT_EXCHANGE: ${EVENT_EXCHANGE:-hotel.events}
+      HOTEL_TIME_ZONE: ${HOTEL_TIME_ZONE:-Asia/Ho_Chi_Minh}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8108/actuator/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  billing-service:
+    <<: *java-service
+    build:
+      context: ../services/billing-service
+    environment:
+      <<: *java-common-env
+      SERVER_PORT: 8109
+      BILLING_DB_URL: jdbc:postgresql://postgres:5432/billing_db
+      BILLING_DB_USER: billing_user
+      BILLING_DB_PASSWORD: billing_local_password
+      JWT_ISSUER_URI: http://identity-service:8101
+      JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+      JWT_AUDIENCE: hotel-api
+      EVENT_EXCHANGE: ${EVENT_EXCHANGE:-hotel.events}
+      HOTEL_TIME_ZONE: ${HOTEL_TIME_ZONE:-Asia/Ho_Chi_Minh}
+      HOTEL_LEGAL_NAME: ${HOTEL_LEGAL_NAME:-Hotel AI}
+      HOTEL_LEGAL_ADDRESS: ${HOTEL_LEGAL_ADDRESS:-Ho Chi Minh City, Vietnam}
+      HOTEL_TAX_CODE: ${HOTEL_TAX_CODE:-0000000000}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8109/actuator/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  review-service:
+    <<: *java-service
+    build:
+      context: ../services/review-service
+    environment:
+      <<: *java-common-env
+      SERVER_PORT: 8110
+      REVIEW_DB_URL: jdbc:postgresql://postgres:5432/review_db
+      REVIEW_DB_USER: review_user
+      REVIEW_DB_PASSWORD: review_local_password
+      JWT_ISSUER_URI: http://identity-service:8101
+      JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+      JWT_AUDIENCE: hotel-api
+      EVENT_EXCHANGE: ${EVENT_EXCHANGE:-hotel.events}
+      AI_CUSTOMER_ANALYTICS_URL: http://ai-customer-analytics-service:8000
+      REVIEW_PROHIBITED_TERMS: ${REVIEW_PROHIBITED_TERMS:-địt,đụ,mẹ kiếp}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8110/actuator/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      ai-customer-analytics-service:
+        condition: service_healthy
+
+  notification-service:
+    <<: *java-service
+    build:
+      context: ../services/notification-service
+    environment:
+      <<: *java-common-env
+      SERVER_PORT: 8111
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notification_db
+      SPRING_DATASOURCE_USERNAME: notification_user
+      SPRING_DATASOURCE_PASSWORD: notification_local_password
+      JWT_ISSUER: http://identity-service:8101
+      JWT_ISSUER_URI: http://identity-service:8101
+      JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+      JWT_AUDIENCE: hotel-api
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_AUTH: ${SMTP_AUTH:-false}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-false}
+      SMTP_CONNECTION_TIMEOUT_MS: ${SMTP_CONNECTION_TIMEOUT_MS:-5000}
+      SMTP_TIMEOUT_MS: ${SMTP_TIMEOUT_MS:-10000}
+      SMTP_WRITE_TIMEOUT_MS: ${SMTP_WRITE_TIMEOUT_MS:-10000}
+      EMAIL_ADAPTER_MODE: ${EMAIL_ADAPTER_MODE:-smtp}
+      EMAIL_FROM: ${EMAIL_FROM:-no-reply@hotelai.local}
+      EMAIL_FALLBACK_TO_MAILPIT: ${EMAIL_FALLBACK_TO_MAILPIT:-false}
+      MAILPIT_SMTP_HOST: ${MAILPIT_SMTP_HOST:-mailpit}
+      MAILPIT_SMTP_PORT: ${MAILPIT_SMTP_PORT:-1025}
+      MAILPIT_SMTP_AUTH: ${MAILPIT_SMTP_AUTH:-false}
+      MAILPIT_SMTP_STARTTLS: ${MAILPIT_SMTP_STARTTLS:-false}
+      MAILPIT_SMTP_CONNECTION_TIMEOUT_MS: ${MAILPIT_SMTP_CONNECTION_TIMEOUT_MS:-3000}
+      MAILPIT_SMTP_TIMEOUT_MS: ${MAILPIT_SMTP_TIMEOUT_MS:-5000}
+      MAILPIT_SMTP_WRITE_TIMEOUT_MS: ${MAILPIT_SMTP_WRITE_TIMEOUT_MS:-5000}
+      MAIL_HEALTH_ENABLED: ${MAIL_HEALTH_ENABLED:-false}
+      SMS_PROVIDER: ${SMS_PROVIDER:-mock}
+      SMS_API_URL: ${SMS_API_URL:-}
+      SMS_API_KEY: ${SMS_API_KEY:-}
+      ZALO_PROVIDER: ${ZALO_PROVIDER:-mock}
+      ZALO_API_URL: ${ZALO_API_URL:-https://rest.esms.vn/MainService.svc/json/SendZaloMessage_V5_post/}
+      ZALO_API_KEY: ${ZALO_API_KEY:-}
+      ZALO_SECRET_KEY: ${ZALO_SECRET_KEY:-}
+      ZALO_OA_ID: ${ZALO_OA_ID:-}
+      ZALO_TEMPLATE_OTP_ID: ${ZALO_TEMPLATE_OTP_ID:-}
+      ZALO_TEMPLATE_DATA_KEY: ${ZALO_TEMPLATE_DATA_KEY:-otp}
+      ZALO_SANDBOX: ${ZALO_SANDBOX:-true}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8111/actuator/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      mailpit:
+        condition: service_healthy
+
+  reporting-audit-service:
+    <<: *java-service
+    build:
+      context: ../services/reporting-audit-service
+    environment:
+      <<: *java-common-env
+      SERVER_PORT: 8112
+      REPORTING_AUDIT_DB_URL: jdbc:postgresql://postgres:5432/reporting_audit_db
+      REPORTING_AUDIT_DB_USER: reporting_audit_user
+      REPORTING_AUDIT_DB_PASSWORD: reporting_audit_local_password
+      JWT_ISSUER_URI: http://identity-service:8101
+      JWT_JWK_SET_URI: http://identity-service:8101/.well-known/jwks.json
+      JWT_AUDIENCE: hotel-api
+      EVENT_EXCHANGE: ${EVENT_EXCHANGE:-hotel.events}
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-local-internal-key}
+      HOTEL_TIME_ZONE: ${HOTEL_TIME_ZONE:-Asia/Ho_Chi_Minh}
+      HOTEL_CURRENCY: ${HOTEL_CURRENCY:-VND}
+      AUDIT_RETENTION_DAYS: ${AUDIT_RETENTION_DAYS:-365}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8112/actuator/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  ai-schema-migrator:
+    image: postgres:17-alpine
+    restart: "no"
+    environment:
+      PGCONNECT_TIMEOUT: 5
+      POSTGRES_ADMIN_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-hotel_admin_local_password}
+    volumes:
+      - ../ai-service/migrations:/migrations:ro
+    command:
+      - sh
+      - -ec
+      - |
+        PGPASSWORD=$$POSTGRES_ADMIN_PASSWORD psql -h postgres -U hotel_admin -d ai_conversation_db -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+        PGPASSWORD=ai_conversation_local_password psql -h postgres -U ai_conversation_user -d ai_conversation_db -v ON_ERROR_STOP=1 -f /migrations/conversation.sql
+        PGPASSWORD=ai_revenue_local_password psql -h postgres -U ai_revenue_user -d ai_revenue_db -v ON_ERROR_STOP=1 -f /migrations/revenue.sql
+        PGPASSWORD=ai_customer_analytics_local_password psql -h postgres -U ai_customer_analytics_user -d ai_customer_analytics_db -v ON_ERROR_STOP=1 -f /migrations/customer-analytics.sql
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [hotel-network]
+
+  ai-conversation-service:
+    <<: *ai-service
+    build:
+      context: ../ai-service
+    command: ["uvicorn", "app.conversation_main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      <<: *ai-common-env
+      DATABASE_URL: postgresql://ai_conversation_user:ai_conversation_local_password@postgres:5432/ai_conversation_db
+    depends_on:
+      ai-schema-migrator:
+        condition: service_completed_successfully
+
+  ai-recommendation-service:
+    <<: *ai-service
+    command: ["uvicorn", "app.recommendation_main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      <<: *ai-common-env
+    depends_on:
+      ai-schema-migrator:
+        condition: service_completed_successfully
+
+  ai-forecasting-service:
+    <<: *ai-service
+    command: ["uvicorn", "app.forecasting_main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      <<: *ai-common-env
+      ANALYTICS_DATABASE_URL: postgresql://reporting_audit_user:reporting_audit_local_password@postgres:5432/reporting_audit_db
+    depends_on:
+      ai-schema-migrator:
+        condition: service_completed_successfully
+      reporting-audit-service:
+        condition: service_healthy
+
+  ai-revenue-service:
+    <<: *ai-service
+    command: ["uvicorn", "app.revenue_main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      <<: *ai-common-env
+      ANALYTICS_DATABASE_URL: postgresql://reporting_audit_user:reporting_audit_local_password@postgres:5432/reporting_audit_db
+      REVENUE_DATABASE_URL: postgresql://ai_revenue_user:ai_revenue_local_password@postgres:5432/ai_revenue_db
+    depends_on:
+      ai-schema-migrator:
+        condition: service_completed_successfully
+      reporting-audit-service:
+        condition: service_healthy
+
+  ai-customer-analytics-service:
+    <<: *ai-service
+    command: ["uvicorn", "app.customer_analytics_main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      <<: *ai-common-env
+      ANALYTICS_DATABASE_URL: postgresql://reporting_audit_user:reporting_audit_local_password@postgres:5432/reporting_audit_db
+      CUSTOMER_ANALYTICS_DATABASE_URL: postgresql://ai_customer_analytics_user:ai_customer_analytics_local_password@postgres:5432/ai_customer_analytics_db
+    depends_on:
+      ai-schema-migrator:
+        condition: service_completed_successfully
+      reporting-audit-service:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ../frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:${GATEWAY_PORT:-8081}/api/v1
+    restart: "${RESTART_POLICY:-on-failure:3}"
+    cpus: "${FRONTEND_CPUS:-0.50}"
+    mem_limit: "${FRONTEND_MEMORY_LIMIT:-256m}"
+    mem_reservation: "${FRONTEND_MEMORY_RESERVATION:-64m}"
+    pids_limit: 128
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:${GATEWAY_PORT:-8081}/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks: [hotel-network]
+
+  webhook-ingress:
+    image: nginx:1.29-alpine
+    profiles: [casso-tunnel]
+    restart: "${RESTART_POLICY:-on-failure:3}"
+    cpus: "0.10"
+    mem_limit: "64m"
+    mem_reservation: "16m"
+    pids_limit: 64
+    volumes:
+      - ./casso/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks: [hotel-network]
+
+  ngrok:
+    image: ngrok/ngrok:3-alpine
+    profiles: [casso-tunnel]
+    restart: "${RESTART_POLICY:-on-failure:3}"
+    cpus: "0.10"
+    mem_limit: "96m"
+    mem_reservation: "24m"
+    pids_limit: 64
+    command: ["http", "http://webhook-ingress:8080", "--log", "stdout"]
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
+    ports:
+      - "127.0.0.1:4040:4040"
+    depends_on:
+      webhook-ingress:
+        condition: service_started
+    networks: [hotel-network]
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.130.1
+    profiles: [observability]
+    restart: "${RESTART_POLICY:-on-failure:3}"
+    cpus: "${OBSERVABILITY_CPUS:-0.50}"
+    mem_limit: "${OTEL_MEMORY_LIMIT:-256m}"
+    command: ["--config=/etc/otelcol/config.yml"]
+    volumes:
+      - ./observability/otel-collector.yml:/etc/otelcol/config.yml:ro
+    depends_on: [jaeger]
+    networks: [hotel-network]
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.71.0
+    profiles: [observability]
+    restart: "${RESTART_POLICY:-on-failure:3}"
+    cpus: "${OBSERVABILITY_CPUS:-0.50}"
+    mem_limit: "${JAEGER_MEMORY_LIMIT:-384m}"
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "127.0.0.1:16686:16686"
+    networks: [hotel-network]
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    profiles: [observability]
+    restart: "${RESTART_POLICY:-on-failure:3}"
+    cpus: "${OBSERVABILITY_CPUS:-0.50}"
+    mem_limit: "${PROMETHEUS_MEMORY_LIMIT:-384m}"
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "127.0.0.1:9090:9090"
+    networks: [hotel-network]
+
+  grafana:
+    image: grafana/grafana:12.1.0
+    profiles: [observability]
+    restart: "${RESTART_POLICY:-on-failure:3}"
+    cpus: "${OBSERVABILITY_CPUS:-0.50}"
+    mem_limit: "${GRAFANA_MEMORY_LIMIT:-384m}"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-grafana_local_password}
+    ports:
+      - "127.0.0.1:3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on: [prometheus]
+    networks: [hotel-network]
+
+volumes:
+  microservice_postgres_data:
+  microservice_redis_data:
+  rabbitmq_data:
+  identity_jwt_keys:
+  grafana_data:
+
+networks:
+  hotel-network:
+    driver: bridge

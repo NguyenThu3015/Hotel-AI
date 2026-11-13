@@ -1,0 +1,74 @@
+spring:
+  application:
+    name: identity-service
+  datasource:
+    url: ${IDENTITY_DB_URL:jdbc:postgresql://localhost:5433/identity_db}
+    username: ${IDENTITY_DB_USER:identity_user}
+    password: ${IDENTITY_DB_PASSWORD:identity_password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+        format_sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:hotel}
+    password: ${RABBITMQ_PASSWORD:hotel_password}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      repositories:
+        enabled: false
+
+server:
+  port: ${PORT:8101}
+  shutdown: graceful
+
+identity:
+  hotel-id: ${HOTEL_ID:HOTEL-1}
+  security:
+    issuer: ${JWT_ISSUER:http://identity-service:8101}
+    audience: ${JWT_AUDIENCE:hotel-api}
+    key-id: ${JWT_KEY_ID:identity-dev-1}
+    private-key-location: ${JWT_PRIVATE_KEY_LOCATION:}
+    public-key-location: ${JWT_PUBLIC_KEY_LOCATION:}
+    access-token-minutes: ${ACCESS_TOKEN_MINUTES:15}
+    refresh-token-days: ${REFRESH_TOKEN_DAYS:7}
+    otp-minutes: ${OTP_MINUTES:10}
+    password-reset-minutes: ${PASSWORD_RESET_MINUTES:15}
+  outbox:
+    exchange: ${EVENT_EXCHANGE:hotel.events}
+    batch-size: ${OUTBOX_BATCH_SIZE:50}
+    fixed-delay-ms: ${OUTBOX_FIXED_DELAY_MS:1000}
+  bootstrap:
+    admin-email: ${BOOTSTRAP_ADMIN_EMAIL:}
+    admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:}
+    admin-name: ${BOOTSTRAP_ADMIN_NAME:System Administrator}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  level:
+    com.hotelai.identity: INFO
