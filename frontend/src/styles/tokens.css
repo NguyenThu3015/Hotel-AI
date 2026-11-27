@@ -1,0 +1,108 @@
+:root {
+  /* Core Palette — Lagoon Emerald, Luminous Pearl & Champagne Gold */
+  --ink-950: #031411;
+  --ink-900: #07201b;
+  --ink-800: #0e332c;
+  --ink-700: #1b4940;
+  --ink-600: #395851;
+  --ink-500: #54726b;
+  --ink-300: #9eb4ae;
+  --ink-200: #cddad6;
+  --ink-100: #e5eeec;
+  --ink-50: #f2f7f5;
+
+  --emerald: #0a6e5c;
+  --emerald-bright: #12967d;
+  --emerald-glow: rgba(18, 150, 125, 0.28);
+  --emerald-soft: rgba(18, 150, 125, 0.11);
+
+  --gold: #c8963e;
+  --gold-bright: #edd08d;
+  --gold-soft: rgba(200, 150, 62, 0.14);
+
+  --ivory: #f4f7f6;
+  --paper: #fbfcfa;
+  --white: #ffffff;
+
+  --danger: #c93b4b;
+  --danger-soft: rgba(201, 59, 75, 0.11);
+  --warning: #b77416;
+  --warning-soft: rgba(183, 116, 22, 0.13);
+  --info: #1d6fa5;
+  --info-soft: rgba(29, 111, 165, 0.12);
+
+  /* Optical Liquid Glass Material Tokens */
+  --lg-blur-chrome: blur(24px) saturate(180%);
+  --lg-blur-card: blur(16px) saturate(155%);
+  --lg-blur-modal: blur(30px) saturate(190%);
+
+  --lg-glass-light: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.82) 0%,
+    rgba(255, 255, 255, 0.6) 100%
+  );
+  --lg-glass-elevated: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.94) 0%,
+    rgba(248, 252, 251, 0.84) 100%
+  );
+  --lg-glass-dark: linear-gradient(
+    145deg,
+    rgba(9, 39, 33, 0.72) 0%,
+    rgba(4, 20, 17, 0.52) 100%
+  );
+  --lg-glass-obsidian: linear-gradient(
+    155deg,
+    rgba(5, 26, 22, 0.88) 0%,
+    rgba(3, 15, 13, 0.78) 100%
+  );
+
+  --lg-rim-light: rgba(255, 255, 255, 0.78);
+  --lg-rim-subtle: rgba(10, 62, 52, 0.12);
+  --lg-rim-dark: rgba(255, 255, 255, 0.2);
+  --lg-specular-inset: inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 0 rgba(10, 62, 52, 0.05);
+  --lg-specular-dark: inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.24);
+
+  /* Spatial Depth Shadows */
+  --line: rgba(12, 52, 44, 0.11);
+  --line-strong: rgba(12, 52, 44, 0.2);
+  --shadow-xs: 0 4px 14px rgba(4, 22, 18, 0.05);
+  --shadow-sm: 0 12px 32px rgba(4, 22, 18, 0.08),
+    0 2px 6px rgba(4, 22, 18, 0.04);
+  --shadow-md: 0 22px 56px rgba(4, 22, 18, 0.12),
+    0 6px 18px rgba(4, 22, 18, 0.06);
+  --shadow-lg: 0 36px 96px rgba(3, 18, 15, 0.22),
+    0 12px 28px rgba(3, 18, 15, 0.1);
+
+  /* Geometry & Motion */
+  --radius-sm: 12px;
+  --radius: 18px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+
+  --header-height: 78px;
+  --admin-header-height: 68px;
+  --sidebar-width: 288px;
+
+  --ease-fluid: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.42, 0.64, 1);
+
+  --font-sans: "Plus Jakarta Sans", "Be Vietnam Pro", "Segoe UI Variable",
+    "Segoe UI", system-ui, sans-serif;
+  --font-display: "Playfair Display", "Cormorant Garamond", Georgia, serif;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --lg-glass-light: #ffffff;
+    --lg-glass-elevated: #ffffff;
+    --lg-glass-dark: #07231e;
+    --lg-glass-obsidian: #051915;
+    --lg-blur-chrome: none;
+    --lg-blur-card: none;
+    --lg-blur-modal: none;
+  }
+}

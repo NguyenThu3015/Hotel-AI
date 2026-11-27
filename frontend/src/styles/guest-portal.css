@@ -1,0 +1,905 @@
+/* ==========================================================================
+   HotelAI — Guest Portal Liquid Glass Styles (/, /rooms, /bookings, /login, /profile)
+   ========================================================================== */
+
+/* 1. Deep Lagoon Aurora Hero */
+.hero {
+  position: relative;
+  overflow: hidden;
+  min-height: auto;
+  margin: 14px clamp(14px, 3vw, 40px) 0;
+  padding: clamp(32px, 4vw, 52px) clamp(22px, 4vw, 56px) clamp(54px, 5.5vw, 76px);
+  border-radius: var(--radius-xl);
+  display: grid;
+  grid-template-columns: minmax(0, 1.28fr) minmax(320px, 0.72fr);
+  gap: clamp(24px, 3.5vw, 44px);
+  align-items: center;
+  background:
+    radial-gradient(
+      44rem 32rem at 14% 18%,
+      rgba(18, 168, 138, 0.28),
+      transparent 68%
+    ),
+    radial-gradient(
+      38rem 28rem at 88% 16%,
+      rgba(232, 190, 108, 0.22),
+      transparent 66%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(3, 21, 18, 0.88) 0%,
+      rgba(6, 35, 29, 0.76) 52%,
+      rgba(4, 20, 17, 0.92) 100%
+    ),
+    url("/images/hotelai-coastal-hero-v2.png") center / cover no-repeat;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 32px 84px rgba(3, 18, 15, 0.24);
+  color: #f6fbf9;
+}
+
+.hero-ambient-ornament {
+  position: absolute;
+  inset: -15% -10%;
+  border: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 26% 32%,
+      rgba(32, 206, 172, 0.2),
+      transparent 36%
+    ),
+    radial-gradient(
+      circle at 76% 68%,
+      rgba(237, 208, 141, 0.16),
+      transparent 38%
+    );
+  filter: blur(28px);
+  animation: lgAuroraDrift 16s ease-in-out infinite alternate;
+}
+
+.hero-ambient-ornament::before {
+  display: none;
+  content: none;
+}
+
+@keyframes lgAuroraDrift {
+  0% {
+    transform: translate3d(-1.5%, -1%, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(1.5%, 1.5%, 0) scale(1.04);
+  }
+}
+
+.hero-copy {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.hero-top-telemetry {
+  width: fit-content;
+  max-width: 100%;
+  padding: 8px 15px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(246, 251, 249, 0.92);
+}
+
+.hero-copy h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2.2rem, 3.85vw, 3.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  color: #ffffff;
+  text-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+}
+
+.hero-copy h1 em {
+  font-style: italic;
+  font-weight: 500;
+  background: linear-gradient(120deg, #fff3d1 0%, #edd08d 48%, #d4a149 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-copy > p {
+  margin: 0;
+  max-width: 58ch;
+  font-size: clamp(15px, 1.12vw, 17px);
+  line-height: 1.65;
+  color: rgba(235, 246, 242, 0.86);
+}
+
+.hero-cta-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.hero-primary-cta {
+  min-height: 50px;
+  padding: 0 24px;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 750;
+  font-size: 14.5px;
+  color: var(--ink-950);
+  background: linear-gradient(135deg, #f6dfa4 0%, #d6a246 100%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    0 16px 36px rgba(200, 150, 62, 0.34);
+  transition:
+    transform 240ms var(--ease-spring),
+    box-shadow 240ms var(--ease-fluid);
+}
+
+.hero-primary-cta:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 22px 44px rgba(200, 150, 62, 0.45);
+}
+
+.hero-secondary-cta {
+  min-height: 50px;
+  padding: 0 22px;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 650;
+  font-size: 14.5px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.11);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  transition:
+    transform 240ms var(--ease-fluid),
+    background 240ms var(--ease-fluid);
+}
+
+.hero-secondary-cta:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.hero-sanctuary-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-top: 6px;
+}
+
+.hero-destination-pill {
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(244, 250, 248, 0.9);
+  font-size: 12.5px;
+  font-weight: 620;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 220ms var(--ease-fluid);
+}
+
+.hero-destination-pill:hover {
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
+}
+
+.hero-destination-pill.active {
+  background: linear-gradient(
+    135deg,
+    rgba(237, 208, 141, 0.28),
+    rgba(18, 150, 125, 0.28)
+  );
+  border-color: rgba(237, 208, 141, 0.68);
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* Right-hand Optical Liquid Glass Concierge Summary */
+.hero-note {
+  position: relative;
+  z-index: 2;
+  padding: 26px;
+  border-radius: 26px;
+  background: linear-gradient(
+    150deg,
+    rgba(14, 52, 44, 0.62) 0%,
+    rgba(5, 23, 19, 0.54) 100%
+  );
+  backdrop-filter: blur(26px) saturate(180%);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    0 28px 64px rgba(2, 12, 10, 0.38);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hero-note > .hero-note-top {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 0;
+  padding-top: 0;
+}
+
+.hero-note > .hero-metrics-grid,
+.hero-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  border-top: 0;
+  padding-top: 0;
+}
+
+.hero-note-metric {
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hero-note > .hero-metrics-grid .hero-note-metric b,
+.hero-note-metric b {
+  font-size: 28px;
+  line-height: 1.05;
+  color: var(--gold-bright);
+  font-family: var(--font-sans);
+}
+
+.hero-note-metric span {
+  font-size: 12px;
+  color: rgba(235, 246, 242, 0.8);
+}
+
+/* ==========================================================================
+   2. 1-Row Floating Liquid Glass Booking Bar (#search)
+   ========================================================================== */
+.search-shell {
+  position: relative;
+  z-index: 25;
+  width: min(1320px, calc(100% - clamp(24px, 5vw, 80px)));
+  margin: -46px auto 28px;
+  padding: 20px 22px;
+  border-radius: 26px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.88) 0%,
+    rgba(245, 250, 248, 0.78) 100%
+  );
+  backdrop-filter: var(--lg-blur-modal);
+  -webkit-backdrop-filter: var(--lg-blur-modal);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    0 26px 68px rgba(4, 24, 20, 0.14),
+    0 4px 16px rgba(4, 24, 20, 0.05);
+}
+
+.search-top-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.search-kicker-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.preset-chip {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(10, 82, 68, 0.15);
+  color: var(--ink-800);
+  font-size: 12.5px;
+  font-weight: 640;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 200ms var(--ease-fluid);
+}
+
+.preset-chip:hover {
+  background: var(--emerald-soft);
+  border-color: var(--emerald-bright);
+  color: var(--emerald);
+  transform: translateY(-1px);
+}
+
+.preset-chip svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Single-Row Booking Grid */
+.lg-booking-row {
+  display: grid;
+  grid-template-columns:
+    minmax(190px, 1.45fr)
+    minmax(138px, 1fr)
+    minmax(138px, 1fr)
+    repeat(3, minmax(112px, 0.82fr))
+    minmax(168px, 1.05fr);
+  gap: 10px;
+  align-items: end;
+}
+
+.lg-field-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.lg-field-cell > label,
+.lg-field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--ink-700);
+  margin: 0;
+}
+
+.lg-field-cell > label svg,
+.lg-field-label svg {
+  width: 14px;
+  height: 14px;
+  color: var(--emerald);
+  flex: 0 0 auto;
+}
+
+.lg-field-cell select,
+.lg-field-cell input[type="date"] {
+  min-height: 46px;
+  padding: 9px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(12, 64, 54, 0.16);
+  font-weight: 620;
+  font-size: 14px;
+  box-shadow: inset 0 1px 2px rgba(4, 22, 18, 0.03);
+}
+
+/* Compact Inline +/- Stepper */
+.lg-stepper {
+  height: 46px;
+  padding: 3px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(12, 64, 54, 0.16);
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  align-items: center;
+  box-shadow: inset 0 1px 2px rgba(4, 22, 18, 0.03);
+}
+
+.lg-stepper:focus-within {
+  border-color: var(--emerald-bright);
+  box-shadow: 0 0 0 4px rgba(18, 150, 125, 0.12);
+}
+
+.lg-stepper-btn {
+  width: 34px;
+  height: 38px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(18, 150, 125, 0.09);
+  color: var(--emerald);
+  display: inline-grid;
+  place-items: center;
+  transition:
+    background 180ms var(--ease-fluid),
+    transform 180ms var(--ease-fluid);
+}
+
+.lg-stepper-btn:hover:not(:disabled) {
+  background: rgba(18, 150, 125, 0.2);
+  transform: scale(1.04);
+}
+
+.lg-stepper-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.lg-stepper input[type="number"] {
+  min-height: 36px;
+  height: 36px;
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  text-align: center;
+  font-weight: 750;
+  font-size: 15px;
+  color: var(--ink-950);
+  box-shadow: none;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.lg-stepper input[type="number"]::-webkit-outer-spin-button,
+.lg-stepper input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.search-shell .search-form {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+.search-shell .search-button,
+.search-button {
+  margin-left: 0;
+  min-height: 46px;
+  height: 46px;
+  width: 100%;
+  border-radius: 14px;
+  padding: 0 16px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.search-shell .search-advanced,
+.search-advanced {
+  margin-top: 12px;
+  padding: 10px 0 0;
+  background: transparent;
+  border-top: 1px solid rgba(10, 62, 52, 0.09);
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  box-shadow: none;
+}
+
+.search-shell .search-advanced > summary::before {
+  display: none;
+  content: none;
+}
+
+.search-advanced > summary {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-700);
+}
+
+/* ==========================================================================
+   3. Immediate Real-time Suites (#suites) & Shimmering AI Concierge Bar
+   ========================================================================== */
+#suites.content-section {
+  width: min(1320px, calc(100% - clamp(24px, 5vw, 80px)));
+  margin: 18px auto 44px;
+}
+
+.recommend-bar {
+  position: relative;
+  overflow: hidden;
+  padding: 18px 22px;
+  margin-bottom: 22px;
+  border-radius: 22px;
+  background: linear-gradient(
+    135deg,
+    rgba(9, 52, 44, 0.92) 0%,
+    rgba(13, 84, 70, 0.88) 55%,
+    rgba(8, 42, 35, 0.94) 100%
+  );
+  border: 1px solid rgba(237, 208, 141, 0.34);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 20px 48px rgba(5, 28, 23, 0.16);
+  color: #f6fbf9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.recommend-bar-copy strong {
+  color: #ffffff;
+}
+
+.recommend-bar-copy span {
+  color: rgba(235, 246, 242, 0.84);
+}
+
+.recommend-kicker {
+  color: var(--gold-bright) !important;
+}
+
+.recommend-trigger {
+  background: linear-gradient(135deg, #f6dfa4 0%, #d6a246 100%) !important;
+  color: var(--ink-950) !important;
+  border-color: rgba(255, 255, 255, 0.65) !important;
+  border-radius: var(--radius-pill) !important;
+  font-weight: 760 !important;
+  white-space: nowrap;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 10px 26px rgba(200, 150, 62, 0.32);
+}
+
+/* Deep-Layered Liquid Glass Room Cards */
+.room-card {
+  border-radius: 24px;
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.94) 0%,
+    rgba(247, 251, 250, 0.86) 100%
+  );
+  backdrop-filter: var(--lg-blur-card);
+  -webkit-backdrop-filter: var(--lg-blur-card);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    0 18px 46px rgba(4, 24, 20, 0.08),
+    0 2px 8px rgba(4, 24, 20, 0.04);
+  transition:
+    transform 300ms var(--ease-fluid),
+    box-shadow 300ms var(--ease-fluid),
+    border-color 300ms var(--ease-fluid);
+}
+
+.room-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(18, 150, 125, 0.36);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 28px 64px rgba(4, 24, 20, 0.14);
+}
+
+.room-visual {
+  border-radius: 20px;
+  overflow: hidden;
+  transition: transform 480ms var(--ease-fluid);
+}
+
+.ai-score {
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, #fdf2d6 0%, #f5dc9c 100%);
+  border: 1px solid rgba(200, 150, 62, 0.45);
+  color: #5d3e08;
+  font-weight: 760;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ==========================================================================
+   4. Bento Destinations & Segmented Glass Region Filter
+   ========================================================================== */
+.region-filter-tabs {
+  padding: 5px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: var(--lg-blur-card);
+  -webkit-backdrop-filter: var(--lg-blur-card);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: var(--lg-specular-inset), var(--shadow-xs);
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.region-tab-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  border: 0;
+  background: transparent;
+  color: var(--ink-700);
+  font-weight: 680;
+  font-size: 13px;
+  transition: all 220ms var(--ease-fluid);
+}
+
+.region-tab-btn.active {
+  background: linear-gradient(135deg, #0c7b66 0%, #064d3f 100%);
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(10, 110, 92, 0.24);
+}
+
+.destination-card {
+  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 22px 54px rgba(4, 22, 18, 0.16);
+  transition:
+    transform 320ms var(--ease-fluid),
+    box-shadow 320ms var(--ease-fluid),
+    border-color 320ms var(--ease-fluid);
+}
+
+.destination-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(237, 208, 141, 0.62);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    0 30px 72px rgba(4, 22, 18, 0.26);
+}
+
+/* ==========================================================================
+   5. Secondary Guest Pages (/rooms, /bookings, /login, /profile)
+   ========================================================================== */
+.catalog-hero {
+  border-radius: 28px;
+  background:
+    radial-gradient(
+      36rem 24rem at 15% 15%,
+      rgba(18, 168, 138, 0.24),
+      transparent 68%
+    ),
+    radial-gradient(
+      32rem 22rem at 88% 20%,
+      rgba(232, 190, 108, 0.2),
+      transparent 65%
+    ),
+    linear-gradient(135deg, #05221d 0%, #0a3c33 55%, #041915 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    var(--shadow-md);
+}
+
+.catalog-filter-bar {
+  margin: 0 auto 24px;
+  padding: 14px 18px;
+  border-radius: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--lg-glass-light);
+  backdrop-filter: var(--lg-blur-chrome);
+  -webkit-backdrop-filter: var(--lg-blur-chrome);
+  border: 1px solid var(--lg-rim-light);
+  box-shadow: var(--lg-specular-inset), var(--shadow-sm);
+}
+
+.catalog-filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.catalog-filter-pill {
+  min-height: 38px;
+  padding: 0 15px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(10, 74, 62, 0.14);
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--ink-800);
+  font-size: 13px;
+  font-weight: 660;
+  transition: all 200ms var(--ease-fluid);
+}
+
+.catalog-filter-pill:hover {
+  border-color: var(--emerald-bright);
+  color: var(--emerald);
+}
+
+.catalog-filter-pill.active {
+  background: linear-gradient(135deg, #0c7b66 0%, #064d3f 100%);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(10, 110, 92, 0.24);
+}
+
+.catalog-search-box {
+  position: relative;
+  min-width: min(280px, 100%);
+  flex: 1 1 240px;
+  max-width: 340px;
+}
+
+.catalog-search-box input {
+  min-height: 40px;
+  border-radius: var(--radius-pill);
+  padding-left: 38px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.catalog-search-box svg {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--ink-500);
+  pointer-events: none;
+}
+
+.catalog-card,
+.booking-list article,
+.auth-card,
+.profile-grid .panel,
+.notifications-glass-panel {
+  background: var(--lg-glass-elevated);
+  backdrop-filter: var(--lg-blur-card);
+  -webkit-backdrop-filter: var(--lg-blur-card);
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  box-shadow: var(--lg-specular-inset), var(--shadow-sm);
+  border-radius: 24px;
+}
+
+.auth-page {
+  background: transparent;
+  gap: 24px;
+}
+
+.auth-story {
+  padding: clamp(28px, 4vw, 46px);
+  border-radius: 28px;
+  background:
+    radial-gradient(
+      34rem 26rem at 18% 18%,
+      rgba(20, 184, 152, 0.28),
+      transparent 65%
+    ),
+    radial-gradient(
+      28rem 22rem at 85% 80%,
+      rgba(232, 190, 108, 0.22),
+      transparent 65%
+    ),
+    linear-gradient(155deg, #041c18 0%, #093830 56%, #041613 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    var(--shadow-md);
+}
+
+.auth-story ul li b {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  display: inline-grid;
+  place-items: center;
+  background: rgba(237, 208, 141, 0.16);
+  flex: 0 0 auto;
+}
+
+.auth-story ul li svg {
+  width: 16px;
+  height: 16px;
+  color: var(--gold-bright);
+}
+
+.transfer-glass-card {
+  border-radius: 26px;
+  background:
+    radial-gradient(
+      32rem 22rem at 92% 8%,
+      rgba(237, 208, 141, 0.18),
+      transparent 65%
+    ),
+    linear-gradient(150deg, rgba(255, 255, 255, 0.95), rgba(242, 249, 247, 0.9));
+  backdrop-filter: var(--lg-blur-chrome);
+  -webkit-backdrop-filter: var(--lg-blur-chrome);
+  border: 1px solid rgba(18, 150, 125, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    0 24px 60px rgba(4, 24, 20, 0.12);
+}
+
+/* ==========================================================================
+   Responsive Breakpoints (Zero Horizontal Overflow at 390px / 768px / 1366px)
+   ========================================================================== */
+@media (max-width: 1180px) {
+  .hero {
+    grid-template-columns: 1fr;
+    padding-bottom: 72px;
+  }
+
+  .lg-booking-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .lg-booking-row .destination-cell {
+    grid-column: 1 / -1;
+  }
+
+  .lg-booking-row .cta-cell {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .hero {
+    margin: 8px 12px 0;
+    padding: 28px 18px 56px;
+    border-radius: 24px;
+  }
+
+  .search-shell {
+    width: calc(100% - 24px);
+    margin-top: -32px;
+    padding: 16px 14px;
+    border-radius: 22px;
+  }
+
+  .lg-booking-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .lg-booking-row .destination-cell,
+  .lg-booking-row .rooms-cell,
+  .lg-booking-row .cta-cell {
+    grid-column: 1 / -1;
+  }
+
+  #suites.content-section {
+    width: calc(100% - 24px);
+  }
+
+  .recommend-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

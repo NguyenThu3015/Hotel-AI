@@ -39,7 +39,10 @@ export default function AdminPage() {
   const primaryRole = user.roles[0] ? viRole(user.roles[0]) : "Nhân viên";
 
   return (
-    <section className={`admin-layout ${sidebarOpen ? "sidebar-open" : ""}`}>
+    <section
+      className={`admin-layout ${sidebarOpen ? "sidebar-open" : ""}`}
+      data-cockpit-surface="frosted-pearl"
+    >
       <aside className="admin-sidebar">
         <div className="admin-sidebar-head">
           <span className="admin-emblem"><AppIcon name="building" /></span>

@@ -526,7 +526,8 @@ export default function BookingsPage() {
       {authLoading && <p className="muted">Đang kiểm tra phiên đăng nhập…</p>}
       {bankTransfer && (
         <section
-          className="bank-transfer-panel"
+          className="bank-transfer-panel transfer-glass-card"
+          data-glass-spotlight=""
           aria-label="Thông tin chuyển khoản Casso"
         >
           <div className="bank-transfer-qr">
@@ -604,7 +605,11 @@ export default function BookingsPage() {
             (request) => request.status === "PENDING",
           );
           return (
-          <article key={booking.id}>
+          <article
+            key={booking.id}
+            data-glass-spotlight=""
+            data-reveal=""
+          >
             <div>
               <span className={`status ${booking.status.toLowerCase()}`}>
                 {viLabel(booking.status)}

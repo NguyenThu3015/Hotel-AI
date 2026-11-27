@@ -1,0 +1,336 @@
+/* ==========================================================================
+   HotelAI — 9-Module Admin Operations Cockpit (Frosted Pearl & Deep Ocean Glass)
+   ========================================================================== */
+
+.admin-layout {
+  min-height: calc(100vh - var(--admin-header-height));
+  background:
+    radial-gradient(
+      52rem 34rem at 12% 0%,
+      rgba(18, 150, 125, 0.09),
+      transparent 65%
+    ),
+    radial-gradient(
+      44rem 30rem at 92% 8%,
+      rgba(200, 150, 62, 0.08),
+      transparent 64%
+    ),
+    linear-gradient(180deg, #edf3f2 0%, #f5f8f8 52%, #eef4f3 100%);
+}
+
+/* Deep Ocean Optical Glass Sidebar */
+.admin-sidebar {
+  height: calc(100vh - var(--admin-header-height));
+  top: var(--admin-header-height);
+  background:
+    radial-gradient(
+      26rem 20rem at 18% -4%,
+      rgba(24, 178, 146, 0.34),
+      transparent 68%
+    ),
+    radial-gradient(
+      22rem 18rem at 85% 96%,
+      rgba(200, 150, 62, 0.16),
+      transparent 66%
+    ),
+    linear-gradient(180deg, rgba(5, 29, 25, 0.96) 0%, rgba(4, 21, 18, 0.98) 100%);
+  backdrop-filter: var(--lg-blur-chrome);
+  -webkit-backdrop-filter: var(--lg-blur-chrome);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.08),
+    18px 0 48px rgba(4, 20, 17, 0.12);
+}
+
+.staff-profile {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.09),
+    rgba(255, 255, 255, 0.04)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+}
+
+.admin-tabs button {
+  border-radius: 14px;
+  transition:
+    background 220ms var(--ease-fluid),
+    border-color 220ms var(--ease-fluid),
+    transform 220ms var(--ease-fluid),
+    color 220ms var(--ease-fluid);
+}
+
+.admin-tabs button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateX(2px);
+}
+
+.admin-tabs button.active {
+  background: linear-gradient(
+    120deg,
+    rgba(22, 163, 134, 0.36) 0%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  border-color: rgba(237, 208, 141, 0.36);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 3px 0 0 var(--gold-bright),
+    0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+/* Sticky Frosted Glass Workspace Topbar */
+.admin-workspace {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.workspace-topbar {
+  position: sticky;
+  top: var(--admin-header-height);
+  z-index: 40;
+  height: 62px;
+  padding: 0 clamp(16px, 3vw, 40px);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.84) 0%,
+    rgba(244, 250, 248, 0.72) 100%
+  );
+  backdrop-filter: var(--lg-blur-chrome);
+  -webkit-backdrop-filter: var(--lg-blur-chrome);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.86);
+  box-shadow:
+    inset 0 -1px 0 rgba(10, 62, 52, 0.08),
+    0 8px 26px rgba(4, 22, 18, 0.05);
+}
+
+.workspace-status {
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(18, 150, 125, 0.1);
+  border: 1px solid rgba(18, 150, 125, 0.22);
+  color: var(--emerald);
+  font-weight: 680;
+}
+
+.workspace-content {
+  min-width: 0;
+  max-width: 100%;
+  padding: clamp(20px, 2.8vw, 34px) clamp(16px, 3vw, 44px) 76px;
+}
+
+/* High-Contrast Frosted Panels & KPI Metric Cards */
+.admin-layout .panel,
+.admin-layout details.walkin-panel,
+.admin-layout details.admin-Create-drawer {
+  min-width: 0;
+  max-width: 100%;
+  background: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 252, 251, 0.9) 100%
+  );
+  backdrop-filter: var(--lg-blur-card);
+  -webkit-backdrop-filter: var(--lg-blur-card);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    0 14px 36px rgba(4, 24, 20, 0.06),
+    0 2px 6px rgba(4, 24, 20, 0.03);
+  border-radius: 22px;
+}
+
+.metric-grid > article:not(.metric-featured),
+.metric-grid > article:nth-child(2n):not(.metric-featured) {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.96) 0%,
+    rgba(245, 250, 249, 0.9) 100%
+  );
+  backdrop-filter: var(--lg-blur-card);
+  -webkit-backdrop-filter: var(--lg-blur-card);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  color: var(--ink-900);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    0 14px 34px rgba(4, 24, 20, 0.07);
+  transition:
+    transform 240ms var(--ease-fluid),
+    box-shadow 240ms var(--ease-fluid);
+}
+
+.metric-grid > article:not(.metric-featured) > span,
+.metric-grid > article:nth-child(2n):not(.metric-featured) > span {
+  color: var(--ink-600);
+}
+
+.metric-grid > article:not(.metric-featured) > strong,
+.metric-grid > article:nth-child(2n):not(.metric-featured) > strong {
+  color: var(--ink-950);
+}
+
+.metric-grid > article:not(.metric-featured) > small,
+.metric-grid > article:nth-child(2n):not(.metric-featured) > small {
+  color: var(--ink-500);
+}
+
+.metric-grid > article:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 20px 44px rgba(4, 24, 20, 0.11);
+}
+
+.metric-grid > article.metric-featured {
+  background:
+    radial-gradient(
+      20rem 14rem at 90% 10%,
+      rgba(237, 208, 141, 0.24),
+      transparent 70%
+    ),
+    linear-gradient(135deg, #07382f 0%, #0b5c4d 60%, #062a23 100%);
+  border-color: rgba(237, 208, 141, 0.34);
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    0 20px 46px rgba(5, 34, 28, 0.22);
+}
+
+.metric-grid > article.metric-featured > span,
+.metric-grid > article.metric-featured > small {
+  color: rgba(238, 248, 245, 0.84) !important;
+}
+
+.metric-grid > article.metric-featured > strong {
+  color: var(--gold-bright) !important;
+}
+
+.metric-grid strong {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Demand Forecast Luminous Bars */
+.forecast-chart {
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.forecast-column i {
+  border-radius: 10px 10px 5px 5px;
+  background: linear-gradient(180deg, #16a88c 0%, #0a6856 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 6px 16px rgba(10, 110, 92, 0.2);
+  transition:
+    transform 220ms var(--ease-fluid),
+    filter 220ms var(--ease-fluid);
+}
+
+.forecast-column:hover i {
+  transform: scaleY(1.03);
+  filter: brightness(1.08);
+}
+
+/* Responsive Data Tables & Check-in Glass Modal */
+.table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 16px;
+}
+
+.data-table tbody tr {
+  transition: background 160ms ease;
+}
+
+.data-table tbody tr:hover {
+  background: rgba(18, 150, 125, 0.045);
+}
+
+.checkin-modal {
+  background: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.96) 0%,
+    rgba(244, 250, 248, 0.92) 100%
+  );
+  backdrop-filter: var(--lg-blur-modal);
+  -webkit-backdrop-filter: var(--lg-blur-modal);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    0 36px 96px rgba(3, 18, 15, 0.28);
+  border-radius: 26px;
+}
+
+.availability-strip {
+  margin-top: 18px;
+  padding: 14px 18px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  background: var(--lg-glass-light);
+  backdrop-filter: var(--lg-blur-card);
+  -webkit-backdrop-filter: var(--lg-blur-card);
+  border: 1px solid var(--lg-rim-light);
+  box-shadow: var(--lg-specular-inset), var(--shadow-xs);
+  border-radius: 18px;
+}
+
+.inline-pin-icon {
+  width: 13px;
+  height: 13px;
+  vertical-align: -2px;
+  margin-right: 3px;
+  color: var(--emerald);
+}
+
+/* Mobile Overflow Guards (390x844) */
+@media (max-width: 920px) {
+  .admin-sidebar {
+    top: 0;
+    height: 100vh;
+  }
+
+  .workspace-topbar {
+    padding: 0 14px;
+    gap: 8px;
+  }
+
+  .workspace-status {
+    font-size: 11px;
+    padding: 5px 9px;
+    white-space: nowrap;
+  }
+
+  .workspace-content {
+    padding: 18px 12px 64px;
+  }
+
+  .admin-layout .panel,
+  .admin-layout details {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .admin-layout .workspace-heading,
+  .admin-layout .panel-heading,
+  .admin-layout .export-actions,
+  .admin-layout .row-actions,
+  .admin-layout .actions {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+
+  .admin-layout input,
+  .admin-layout select,
+  .admin-layout textarea {
+    max-width: 100%;
+    min-width: 0;
+  }
+}

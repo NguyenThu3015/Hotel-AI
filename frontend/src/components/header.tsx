@@ -5,26 +5,41 @@ import { AppIcon } from "./app-icon";
 import { isHotelStaff } from "@/lib/admin-permissions";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function Header() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const isStaff = isHotelStaff(user?.roles);
-  const isCustomer = user?.roles.some((role) => role.toUpperCase() === "CUSTOMER") ?? false;
+  const isCustomer =
+    user?.roles.some((role) => role.toUpperCase() === "CUSTOMER") ?? false;
   const isAdmin = pathname.startsWith("/admin");
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 16);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <header className={`site-header ${isAdmin ? "admin-header" : "luxury-public-header"}`}>
+    <header
+      className={`site-header ${isAdmin ? "admin-header" : "luxury-public-header"} ${scrolled ? "header-scrolled" : ""}`}
+    >
       <div className="header-brand-cluster">
         <Link href="/" className="brand" aria-label="HotelAI - Trang chủ">
           <span className="brand-mark" aria-hidden="true">
             <span className="brand-mark-monogram">H</span>
           </span>
           <span className="brand-copy">
-            <b>Hotel<span>AI</span></b>
-            <small>Grand Luxury Collection</small>
+            <b>
+              Hotel<span>AI</span>
+            </b>
+            <small>
+              {isAdmin ? "Operations Cockpit" : "Grand Luxury Collection"}
+            </small>
           </span>
         </Link>
         {!isAdmin && (
@@ -35,6 +50,7 @@ export function Header() {
         )}
       </div>
       <button
+        type="button"
         className="menu-button"
         aria-label={open ? "Đóng trình đơn" : "Mở trình đơn"}
         aria-expanded={open}
@@ -42,26 +58,63 @@ export function Header() {
       >
         <AppIcon name={open ? "x" : "menu"} />
       </button>
-      <nav className={open ? "nav-open" : ""} onClick={() => setOpen(false)} aria-label="Điều hướng chính">
+      <nav
+        className={open ? "nav-open" : ""}
+        onClick={() => setOpen(false)}
+        aria-label="Điều hướng chính"
+      >
         <Link className={pathname === "/" ? "active" : ""} href="/">
           <AppIcon name="search" /> <span>Tìm phòng</span>
         </Link>
         <Link className={pathname === "/rooms" ? "active" : ""} href="/rooms">
           <AppIcon name="bed" /> <span>Hạng phòng</span>
         </Link>
-        {isCustomer && <Link className={pathname === "/bookings" ? "active" : ""} href="/bookings"><AppIcon name="calendar" /><span>Kỳ nghỉ của tôi</span></Link>}
-        {user && <Link className={pathname === "/profile" ? "active" : ""} href="/profile"><AppIcon name="user" /><span>Tài khoản</span></Link>}
-        {isStaff && <Link className={pathname === "/admin" ? "active" : ""} href="/admin"><AppIcon name="building" /><span>Điều hành</span></Link>}
+        {isCustomer && (
+          <Link
+            className={pathname === "/bookings" ? "active" : ""}
+            href="/bookings"
+          >
+            <AppIcon name="calendar" />
+            <span>Kỳ nghỉ của tôi</span>
+          </Link>
+        )}
+        {user && (
+          <Link
+            className={pathname === "/profile" ? "active" : ""}
+            href="/profile"
+          >
+            <AppIcon name="user" />
+            <span>Tài khoản</span>
+          </Link>
+        )}
+        {isStaff && (
+          <Link className={pathname === "/admin" ? "active" : ""} href="/admin">
+            <AppIcon name="building" />
+            <span>Điều hành</span>
+          </Link>
+        )}
         {user ? (
           <div className="header-account">
-            <span className="avatar" aria-hidden="true">{user.fullName.trim().charAt(0).toUpperCase()}</span>
-            <span className="account-name"><small>Xin chào</small><b>{user.fullName}</b></span>
-            <button className="link-button logout-button" onClick={() => void logout()} aria-label="Đăng xuất">
+            <span className="avatar" aria-hidden="true">
+              {user.fullName.trim().charAt(0).toUpperCase()}
+            </span>
+            <span className="account-name">
+              <small>Xin chào</small>
+              <b>{user.fullName}</b>
+            </span>
+            <button
+              type="button"
+              className="link-button logout-button"
+              onClick={() => void logout()}
+              aria-label="Đăng xuất"
+            >
               <AppIcon name="log-out" /> <span>Đăng xuất</span>
             </button>
           </div>
         ) : (
-          <Link className="header-login" href="/login">Đăng nhập <AppIcon name="arrow" /></Link>
+          <Link className="header-login" href="/login">
+            <span>Đăng nhập</span> <AppIcon name="arrow" />
+          </Link>
         )}
       </nav>
     </header>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/components/auth-provider";
+import { AppIcon } from "@/components/app-icon";
 import { api } from "@/lib/api";
 import type { AuthChallenge } from "@/lib/types";
 import { FormEvent, useState } from "react";
@@ -24,6 +25,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   useFlashNotifications(error);
   const [busy, setBusy] = useState(false);
+
   async function submit(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
@@ -67,8 +69,8 @@ export default function LoginPage() {
         )
           ? "/admin"
           : requestedPath?.startsWith("/") && !requestedPath.startsWith("//")
-          ? requestedPath
-          : "/",
+            ? requestedPath
+            : "/",
       );
     } catch (reason) {
       setError((reason as Error).message);
@@ -76,22 +78,43 @@ export default function LoginPage() {
       setBusy(false);
     }
   }
+
   return (
     <section className="auth-page">
-      <aside className="auth-story">
-        <Link href="/" className="auth-brand">Hotel<span>AI</span></Link>
+      <aside className="auth-story" data-glass-spotlight="">
+        <Link href="/" className="auth-brand">
+          Hotel<span>AI</span>
+        </Link>
         <div>
           <p className="eyebrow">KỲ NGHỈ BẮT ĐẦU TỪ ĐÂY</p>
           <h2>Dễ dàng quản lý mọi hành trình của bạn.</h2>
-          <p>Lưu thông tin, theo dõi thanh toán, đổi lịch và nhận hỗ trợ trong cùng một nơi.</p>
+          <p>
+            Lưu thông tin cá nhân, theo dõi thanh toán VietQR, đổi lịch linh hoạt
+            và kết nối Quản gia AI xuyên suốt 10 điểm đến.
+          </p>
           <ul>
-            <li><b>✓</b> Thông tin được bảo vệ</li>
-            <li><b>✓</b> Xác minh tài khoản an toàn</li>
-            <li><b>✓</b> Hỗ trợ xuyên suốt kỳ nghỉ</li>
+            <li>
+              <b>
+                <AppIcon name="shield" />
+              </b>{" "}
+              Thông tin &amp; phiên đăng nhập được bảo vệ chuẩn JWT
+            </li>
+            <li>
+              <b>
+                <AppIcon name="check" />
+              </b>{" "}
+              Xác minh OTP 6 số tức thì qua Email / Zalo
+            </li>
+            <li>
+              <b>
+                <AppIcon name="sparkles" />
+              </b>{" "}
+              Đồng bộ đặc quyền hội viên &amp; Quản gia AI 24/7
+            </li>
           </ul>
         </div>
       </aside>
-      <div className="auth-card">
+      <div className="auth-card" data-glass-spotlight="">
         <p className="eyebrow">TÀI KHOẢN HOTELAI</p>
         <h1>
           {resetting
@@ -100,7 +123,9 @@ export default function LoginPage() {
               ? "Tạo tài khoản"
               : "Chào mừng trở lại"}
         </h1>
-        <p className="auth-subtitle">Quản lý hành trình và nhận đề xuất phù hợp với bạn.</p>
+        <p className="auth-subtitle">
+          Quản lý hành trình và nhận đề xuất cá nhân hóa phù hợp với bạn.
+        </p>
         <form onSubmit={submit}>
           {registering && !resetting && !challenge && (
             <>
@@ -136,8 +161,8 @@ export default function LoginPage() {
           {challenge && (
             <>
               <p className="muted">
-                Mã xác minh đã gửi tới {challenge.maskedDestination} và hết hạn lúc{" "}
-                {new Date(challenge.expiresAt).toLocaleTimeString("vi-VN")}.
+                Mã xác minh đã gửi tới {challenge.maskedDestination} và hết hạn
+                lúc {new Date(challenge.expiresAt).toLocaleTimeString("vi-VN")}.
               </p>
               <label>
                 Mã xác minh gồm 6 số
@@ -178,6 +203,7 @@ export default function LoginPage() {
           </button>
         </form>
         <button
+          type="button"
           className="text-action"
           onClick={() => {
             setRegistering(!registering);
@@ -192,6 +218,7 @@ export default function LoginPage() {
         </button>
         {!registering && (
           <button
+            type="button"
             className="text-action secondary-action"
             onClick={() => {
               setResetting(!resetting);

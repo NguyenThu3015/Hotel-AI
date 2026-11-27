@@ -1,6 +1,7 @@
 "use client";
 
 import { api, ApiRequestError } from "@/lib/api";
+import { AppIcon } from "@/components/app-icon";
 import type {
   DestinationCatalogItem,
   Review,
@@ -1112,7 +1113,8 @@ function InventoryManagement() {
                       {dest.regionLabel} · {dest.styleTag}
                     </span>
                     <h3>
-                      📍 {dest.propertyName} ({dest.name})
+                      <AppIcon name="map-pin" className="inline-pin-icon" />
+                      {dest.propertyName} ({dest.name})
                     </h3>
                     <p>
                       {dest.landmark} · {dest.province}
@@ -1294,7 +1296,7 @@ function InventoryManagement() {
                 <article key={type.id}>
                   <div>
                     <span>
-                      📍{" "}
+                      <AppIcon name="map-pin" className="inline-pin-icon" />
                       {type.propertyName ??
                         destInfo?.propertyName ??
                         "HotelAI Phú Quốc"}{" "}
@@ -1584,10 +1586,25 @@ function InventoryManagement() {
                   setRoomForm({ ...roomForm, roomTypeId: event.target.value })
                 }
               >
-                {filteredTypes.map((type) => (
-                  <option value={type.id} key={type.id}>
-                    [{type.destinationName ?? "Phú Quốc"}] {type.name}
-                  </option>
+                {Array.from(
+                  new Set(
+                    filteredTypes.map(
+                      (type) => type.destinationName ?? "Phú Quốc",
+                    ),
+                  ),
+                ).map((destLabel) => (
+                  <optgroup label={destLabel} key={destLabel}>
+                    {filteredTypes
+                      .filter(
+                        (type) =>
+                          (type.destinationName ?? "Phú Quốc") === destLabel,
+                      )
+                      .map((type) => (
+                        <option value={type.id} key={type.id}>
+                          {type.name}
+                        </option>
+                      ))}
+                  </optgroup>
                 ))}
               </select>
             </label>
@@ -1640,10 +1657,25 @@ function InventoryManagement() {
                   setRateForm({ ...rateForm, roomTypeId: event.target.value })
                 }
               >
-                {filteredTypes.map((type) => (
-                  <option value={type.id} key={type.id}>
-                    [{type.destinationName ?? "Phú Quốc"}] {type.name}
-                  </option>
+                {Array.from(
+                  new Set(
+                    filteredTypes.map(
+                      (type) => type.destinationName ?? "Phú Quốc",
+                    ),
+                  ),
+                ).map((destLabel) => (
+                  <optgroup label={destLabel} key={destLabel}>
+                    {filteredTypes
+                      .filter(
+                        (type) =>
+                          (type.destinationName ?? "Phú Quốc") === destLabel,
+                      )
+                      .map((type) => (
+                        <option value={type.id} key={type.id}>
+                          {type.name}
+                        </option>
+                      ))}
+                  </optgroup>
                 ))}
               </select>
             </label>

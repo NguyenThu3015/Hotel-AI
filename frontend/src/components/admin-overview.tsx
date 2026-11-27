@@ -1,6 +1,7 @@
 "use client";
 
 import { api } from "@/lib/api";
+import { AppIcon } from "@/components/app-icon";
 import type { DestinationCatalogItem } from "@/lib/types";
 import { viGuestText, viLabel } from "@/lib/vi";
 import { useFlashNotifications } from "@/components/ui-provider";
@@ -287,7 +288,8 @@ export function AdminOverview() {
                 {destinations.map((dest) => (
                   <li key={dest.code}>
                     <span>
-                      📍 {dest.name} ({dest.regionLabel})
+                      <AppIcon name="map-pin" className="inline-pin-icon" />
+                      {dest.name} ({dest.regionLabel})
                     </span>
                     <strong>
                       {dest.availableRooms} phòng trống · {dest.roomTypeCount} hạng

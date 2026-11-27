@@ -54,6 +54,8 @@ interface AvailabilityResponse {
   content: AvailabilityItem[];
 }
 
+type CatalogFilterKey = "ALL" | "AVAILABLE" | "BAC" | "TRUNG" | "NAM";
+
 function iso(days: number) {
   const date = new Date();
   date.setDate(date.getDate() + days);
@@ -72,6 +74,8 @@ export default function RoomsPage() {
   const [roomTypes, setRoomTypes] = useState<CatalogRoomType[]>([]);
   const [availability, setAvailability] = useState<AvailabilityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<CatalogFilterKey>("ALL");
+  const [queryText, setQueryText] = useState("");
 
   useEffect(() => {
     const query = new URLSearchParams({
@@ -104,21 +108,57 @@ export default function RoomsPage() {
     [availability],
   );
 
+  const filteredRoomTypes = useMemo(() => {
+    const normalizedQuery = queryText.trim().toLowerCase();
+    return roomTypes.filter((type) => {
+      const current = availabilityByType.get(type.id);
+      const sellable = Boolean(
+        current &&
+          current.availableRooms > 0 &&
+          current.price.pricingStatus === "AVAILABLE" &&
+          current.price.total,
+      );
+      if (activeFilter === "AVAILABLE" && !sellable) return false;
+      if (
+        (activeFilter === "BAC" ||
+          activeFilter === "TRUNG" ||
+          activeFilter === "NAM") &&
+        (type.region ?? "").toUpperCase() !== activeFilter
+      ) {
+        return false;
+      }
+      if (normalizedQuery) {
+        const haystack =
+          `${type.name} ${type.code} ${type.propertyName ?? ""} ${type.destinationName ?? ""} ${type.landmark ?? ""}`.toLowerCase();
+        if (!haystack.includes(normalizedQuery)) return false;
+      }
+      return true;
+    });
+  }, [roomTypes, availabilityByType, activeFilter, queryText]);
+
+  const filterOptions: Array<{ key: CatalogFilterKey; label: string }> = [
+    { key: "ALL", label: "Tất cả" },
+    { key: "AVAILABLE", label: "Còn phòng trống" },
+    { key: "BAC", label: "Miền Bắc" },
+    { key: "TRUNG", label: "Miền Trung" },
+    { key: "NAM", label: "Miền Nam" },
+  ];
+
   return (
     <div className="catalog-page">
-      <section className="catalog-hero">
+      <section className="catalog-hero" data-glass-spotlight="">
         <div>
-          <span>KHÔNG GIAN NGHỈ DƯỠNG</span>
+          <span>KHÔNG GIAN NGHỈ DƯỠNG · BỘ SƯU TẬP SUITE</span>
           <h1>Khám phá mọi hạng phòng</h1>
           <p>
-            Toàn bộ hạng phòng đang được HotelAI công khai, kèm sức chứa, tiện
-            nghi và tình trạng mở bán gần nhất.
+            Toàn bộ hạng phòng đang được HotelAI công khai xuyên suốt 3 miền, kèm
+            sức chứa, tiện nghi đặc quyền và tình trạng mở bán thời gian thực.
           </p>
         </div>
         <aside>
           <b>{roomTypes.length || "—"}</b>
           <span>hạng phòng đang kinh doanh</span>
-          <small>Giá và tồn được kiểm tra cho đêm kế tiếp</small>
+          <small>Giá và tồn kho đối chiếu trực tiếp cho đêm kế tiếp</small>
         </aside>
       </section>
 
@@ -129,8 +169,38 @@ export default function RoomsPage() {
             <h2>Chọn không gian hợp với bạn</h2>
           </div>
           <Link className="primary" href="/#search">
-            Kiểm tra ngày lưu trú
+            <AppIcon name="calendar" />
+            <span>Kiểm tra ngày lưu trú</span>
           </Link>
+        </div>
+
+        <div className="catalog-filter-bar" data-glass-spotlight="">
+          <div
+            className="catalog-filter-pills"
+            role="group"
+            aria-label="Lọc nhanh hạng phòng"
+          >
+            {filterOptions.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={`catalog-filter-pill ${activeFilter === item.key ? "active" : ""}`}
+                onClick={() => setActiveFilter(item.key)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <div className="catalog-search-box">
+            <AppIcon name="search" />
+            <input
+              type="search"
+              value={queryText}
+              onChange={(event) => setQueryText(event.target.value)}
+              placeholder="Tìm Suite, Villa, Phú Quốc, Đà Nẵng…"
+              aria-label="Tìm theo tên hạng phòng hoặc điểm đến"
+            />
+          </div>
         </div>
 
         <div className="catalog-grid" aria-live="polite">
@@ -139,13 +209,13 @@ export default function RoomsPage() {
               <div className="catalog-skeleton" key={index} />
             ))}
           {!loading &&
-            roomTypes.map((type, index) => {
+            filteredRoomTypes.map((type, index) => {
               const current = availabilityByType.get(type.id);
               const sellable = Boolean(
                 current &&
-                current.availableRooms > 0 &&
-                current.price.pricingStatus === "AVAILABLE" &&
-                current.price.total,
+                  current.availableRooms > 0 &&
+                  current.price.pricingStatus === "AVAILABLE" &&
+                  current.price.total,
               );
               const image = type.images.find(
                 (item) =>
@@ -155,13 +225,23 @@ export default function RoomsPage() {
               );
 
               return (
-                <article className="catalog-card" key={type.id}>
+                <article
+                  className="catalog-card"
+                  key={type.id}
+                  data-glass-spotlight=""
+                  data-reveal=""
+                  style={
+                    {
+                      "--reveal-delay": `${Math.min(index, 5) * 40}ms`,
+                    } as React.CSSProperties
+                  }
+                >
                   <div
                     className={`catalog-image tone-${(index % 3) + 1}`}
                     style={{
                       backgroundImage: image
-                        ? `linear-gradient(145deg, rgba(4,36,31,.08), rgba(4,36,31,.7)), url(${image.url}), url(/images/hotelai-room-atlas-v1.png)`
-                        : `linear-gradient(145deg, rgba(4,36,31,.08), rgba(4,36,31,.62)), url(/images/hotelai-room-atlas-v1.png)`,
+                        ? `linear-gradient(145deg, rgba(4,36,31,.08), rgba(4,36,31,.72)), url(${image.url}), url(/images/hotelai-room-atlas-v1.png)`
+                        : `linear-gradient(145deg, rgba(4,36,31,.08), rgba(4,36,31,.64)), url(/images/hotelai-room-atlas-v1.png)`,
                       backgroundSize: image
                         ? "cover, cover, 300% 100%"
                         : "cover, 300% 100%",
@@ -211,7 +291,7 @@ export default function RoomsPage() {
                       <span>
                         {sellable ? "Giá tham khảo từ" : "Tình trạng"}
                       </span>
-                      <strong>
+                      <strong className="tabular">
                         {sellable
                           ? money(Number(current?.price.total))
                           : "Liên hệ lễ tân"}
@@ -228,6 +308,25 @@ export default function RoomsPage() {
                 </article>
               );
             })}
+          {!loading && filteredRoomTypes.length === 0 && (
+            <div className="empty-results">
+              <span className="empty-results-icon" aria-hidden="true">
+                <AppIcon name="search" />
+              </span>
+              <h3>Không tìm thấy hạng phòng khớp bộ lọc hiện tại</h3>
+              <p>Hãy thử chọn lại &ldquo;Tất cả&rdquo; hoặc xóa từ khóa tìm kiếm.</p>
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => {
+                  setActiveFilter("ALL");
+                  setQueryText("");
+                }}
+              >
+                Đặt lại bộ lọc
+              </button>
+            </div>
+          )}
         </div>
       </section>
     </div>

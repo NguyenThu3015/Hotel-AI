@@ -14,6 +14,7 @@ import {
 } from "@/lib/vi";
 import { useFlashNotifications } from "@/components/ui-provider";
 import { AppIcon } from "@/components/app-icon";
+import { commercialMinPrice } from "@/components/liquid-motion";
 import Link from "next/link";
 
 interface InventoryAmenity {
@@ -778,6 +779,37 @@ export default function HomePage() {
     }));
   }
 
+  function addDaysToIso(baseIso: string, days: number) {
+    const parsed = new Date(`${baseIso}T00:00:00Z`);
+    if (Number.isNaN(parsed.getTime())) return iso(days);
+    parsed.setUTCDate(parsed.getUTCDate() + days);
+    return parsed.toISOString().slice(0, 10);
+  }
+
+  function handleCheckInChange(nextCheckIn: string) {
+    setCriteria((prev) => ({
+      ...prev,
+      checkIn: nextCheckIn,
+      checkOut:
+        !prev.checkOut || nextCheckIn >= prev.checkOut
+          ? addDaysToIso(nextCheckIn, 1)
+          : prev.checkOut,
+    }));
+  }
+
+  function adjustCounter(
+    field: "adults" | "children" | "rooms",
+    delta: number,
+    min: number,
+  ) {
+    setCriteria((prev) => {
+      const current = Number.parseInt(prev[field], 10);
+      const safeCurrent = Number.isFinite(current) ? current : min;
+      const next = Math.max(min, Math.min(20, safeCurrent + delta));
+      return { ...prev, [field]: String(next) };
+    });
+  }
+
   function preselectServiceAndScroll(serviceId: string) {
     setBookingForm((prev) => ({ ...prev, serviceId }));
     const searchEl = document.getElementById("search");
@@ -788,9 +820,9 @@ export default function HomePage() {
     (total, option) => total + option.availableRooms,
     0,
   );
-  const lowestPrice = options.length
-    ? Math.min(...options.map((option) => option.totalAmount))
-    : null;
+  const lowestPrice = commercialMinPrice(
+    options.map((option) => option.totalAmount),
+  );
 
   const stayNights = Math.max(
     1,
@@ -841,40 +873,22 @@ export default function HomePage() {
       <section className="hero">
         <div className="hero-ambient-ornament" aria-hidden="true" />
         <div className="hero-copy">
-          <div className="hero-top-telemetry" aria-label="Thông số điểm đến và danh hiệu">
+          <div
+            className="hero-top-telemetry"
+            aria-label="Thông số điểm đến và danh hiệu"
+          >
             <span className="telemetry-item">
               <AppIcon name="diamond" />
-              <span>MICHELIN TWO KEYS · FORBES 5★</span>
+              <span>MICHELIN TWO KEYS · 5★ SANCTUARY</span>
             </span>
             <span className="telemetry-divider" aria-hidden="true" />
             <span className="telemetry-item telemetry-coords">
               <AppIcon name="compass" />
               <span>
                 {activeHeroSpotlight.name.toUpperCase()} ·{" "}
-                {activeHeroSpotlight.coordinates}
+                {activeHeroSpotlight.climate}
               </span>
             </span>
-            <span className="telemetry-divider" aria-hidden="true" />
-            <span className="telemetry-item">
-              <AppIcon name="sun" />
-              <span>{activeHeroSpotlight.climate}</span>
-            </span>
-          </div>
-
-          <div
-            className="hero-luxury-badge"
-            aria-label="Danh hiệu khu nghỉ dưỡng 5 sao"
-          >
-            <span className="hero-stars" aria-hidden="true">
-              <AppIcon name="star" />
-              <AppIcon name="star" />
-              <AppIcon name="star" />
-              <AppIcon name="star" />
-              <AppIcon name="star" />
-            </span>
-            <p className="eyebrow">
-              BỘ SƯU TẬP KHU NGHỈ DƯỠNG DI SẢN &amp; TRÍ TUỆ NHÂN TẠO ĐỘC BẢN
-            </p>
           </div>
 
           <h1>
@@ -884,16 +898,15 @@ export default function HomePage() {
           </h1>
 
           <p>
-            Đắm mình trong không gian nghỉ dưỡng 5 sao giao hòa giữa kiến trúc
-            Đông Dương đương đại và công nghệ Quản gia AI cá nhân hóa. Kiểm tra
-            tồn kho phòng thực tế, khóa phòng tức thì trong 15 phút và tận hưởng
-            đặc quyền thượng lưu xuyên suốt 10 điểm đến biểu tượng Việt Nam.
+            Không gian nghỉ dưỡng 5 sao giao hòa giữa kiến trúc bản địa tinh tế
+            và Quản gia AI cá nhân hóa. Kiểm tra phòng trống thời gian thực, giữ
+            phòng tức thì trong 15 phút trên khắp 10 điểm đến biểu tượng Việt Nam.
           </p>
 
           <div className="hero-cta-group">
-            <a className="hero-primary-cta" href="#search">
+            <a className="hero-primary-cta" href="#suites">
               <AppIcon name="crown" />
-              <span>Khởi tạo kỳ nghỉ thượng lưu</span>
+              <span>Khám phá phòng trống ngay</span>
               <AppIcon name="arrow" />
             </a>
             <Link className="hero-secondary-cta" href="/rooms">
@@ -907,55 +920,35 @@ export default function HomePage() {
             role="group"
             aria-label="Điểm đến tiêu biểu"
           >
-            <span className="switcher-label">ĐIỂM ĐẾN TIÊU BIỂU:</span>
-            <div className="switcher-pills">
+            <button
+              type="button"
+              className={`hero-destination-pill ${selectedDestination === "ALL" ? "active" : ""}`}
+              onClick={() => broadcastDestinationChange("ALL")}
+            >
+              <span className="roman-idx">ALL</span>
+              <span>Toàn quốc (10)</span>
+            </button>
+            {heroSanctuarySpotlights.map((spot, idx) => (
               <button
+                key={spot.code}
                 type="button"
-                className={`hero-destination-pill ${selectedDestination === "ALL" ? "active" : ""}`}
-                onClick={() => broadcastDestinationChange("ALL")}
+                className={`hero-destination-pill ${selectedDestination === spot.code ? "active" : ""}`}
+                onClick={() => broadcastDestinationChange(spot.code)}
               >
-                <span className="roman-idx">ALL</span>
-                <span>Toàn bộ 10 Tuyệt tác</span>
+                <span className="roman-idx">
+                  {["I", "II", "III", "IV"][idx]}
+                </span>
+                <span>{spot.name}</span>
               </button>
-              {heroSanctuarySpotlights.map((spot, idx) => (
-                <button
-                  key={spot.code}
-                  type="button"
-                  className={`hero-destination-pill ${selectedDestination === spot.code ? "active" : ""}`}
-                  onClick={() => broadcastDestinationChange(spot.code)}
-                >
-                  <span className="roman-idx">
-                    {["I", "II", "III", "IV"][idx]}
-                  </span>
-                  <span>{spot.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="hero-benefits" aria-label="Lợi ích nổi bật">
-            <span>
-              <i className="benefit-icon">
-                <AppIcon name="check" />
-              </i>
-              Biểu giá cuối minh bạch trọn gói
-            </span>
-            <span>
-              <i className="benefit-icon">
-                <AppIcon name="check" />
-              </i>
-              Khóa tồn kho thực tế tức thì
-            </span>
-            <span>
-              <i className="benefit-icon">
-                <AppIcon name="check" />
-              </i>
-              Private Butler &amp; Quản gia AI 24/7
-            </span>
+            ))}
           </div>
         </div>
 
-        <aside className="hero-note" aria-label="Cam kết dịch vụ">
+        <aside
+          className="hero-note"
+          data-glass-spotlight=""
+          aria-label="Cam kết dịch vụ"
+        >
           <div className="hero-note-top">
             <span className="hero-note-icon" aria-hidden="true">
               <AppIcon name="crown" />
@@ -964,33 +957,25 @@ export default function HomePage() {
               <i /> TRỰC TUYẾN THỜI GIAN THỰC
             </span>
           </div>
-          <small>HỒ SƠ ĐẶC QUYỀN · PRIVATE CONCIERGE</small>
-          <strong>Tuyển chọn Suite hoàn mỹ cho riêng bạn</strong>
-          <p>
-            Hệ thống AI đối chiếu tức thời kiến trúc phòng, tầm nhìn, sức chứa
-            và ngân sách để đề xuất không gian nghỉ dưỡng xứng tầm nhất.
-          </p>
-          <div className="hero-note-metric">
-            <b>{totalAvailableRooms || "—"}</b>
-            <span>phòng &amp; biệt thự sẵn sàng đón khách</span>
-          </div>
-          <div className="hero-note-metric">
-            <b>{options.length || roomTypes.length || "—"}</b>
-            <span>tuyệt tác hạng phòng 5 sao</span>
-          </div>
-          <div className="hero-note-spotlight">
-            <span className="spotlight-kicker">
-              <AppIcon name="map-pin" /> Đang tâm điểm:
-            </span>
-            <strong>{activeHeroSpotlight.propertyTitle}</strong>
-            <small>{activeHeroSpotlight.signatureExperience}</small>
+          <small>PRIVATE CONCIERGE · TỒN KHO THẬT</small>
+          <strong>{activeHeroSpotlight.propertyTitle}</strong>
+          <p>{activeHeroSpotlight.signatureExperience}</p>
+          <div className="hero-metrics-grid">
+            <div className="hero-note-metric">
+              <b>{totalAvailableRooms || "—"}</b>
+              <span>phòng &amp; biệt thự sẵn sàng</span>
+            </div>
+            <div className="hero-note-metric">
+              <b>{options.length || roomTypes.length || "—"}</b>
+              <span>hạng Suite tuyển chọn</span>
+            </div>
           </div>
           <div className="hero-note-footer">
             <span>
               <AppIcon name="tag" />
               {lowestPrice
                 ? `Chỉ từ ${money(lowestPrice)} / kỳ nghỉ`
-                : "Đặc quyền giá đặt trực tiếp tốt nhất"}
+                : "Đặc quyền giá đặt trực tiếp minh bạch"}
             </span>
             <a href="#suites" className="hero-note-link">
               Xem ngay <AppIcon name="arrow" />
@@ -999,28 +984,22 @@ export default function HomePage() {
         </aside>
       </section>
 
-      <section className="search-shell" id="search">
+      <section className="search-shell" id="search" data-glass-spotlight="">
         <form className="search-form" onSubmit={search}>
-          <div className="search-intro">
-            <div className="search-intro-title">
-              <div className="search-kicker-row">
-                <span className="search-atelier-badge">
-                  <AppIcon name="diamond" /> ATELIER ĐẶT PHÒNG TRỰC TUYẾN
+          <div className="search-top-bar">
+            <div className="search-kicker-row">
+              <span className="search-atelier-badge">
+                <AppIcon name="diamond" /> ĐẶT PHÒNG NHANH TRỰC TUYẾN
+              </span>
+              <span className="search-nights-pill">
+                <AppIcon name="moon" /> {stayNights} đêm lưu trú
+              </span>
+              {preselectedServiceObj && (
+                <span className="search-service-pill">
+                  <AppIcon name="sparkles" /> Đính kèm:{" "}
+                  {preselectedServiceObj.name}
                 </span>
-                <span className="search-nights-pill">
-                  <AppIcon name="moon" /> {stayNights} đêm lưu trú
-                </span>
-                {preselectedServiceObj && (
-                  <span className="search-service-pill">
-                    <AppIcon name="sparkles" /> Đính kèm:{" "}
-                    {preselectedServiceObj.name}
-                  </span>
-                )}
-              </div>
-              <strong>
-                Thiết lập lịch trình lưu trú hoặc chọn kịch bản nghỉ dưỡng được
-                tuyển chọn bởi Quản gia
-              </strong>
+              )}
             </div>
             <div
               className="search-presets"
@@ -1086,12 +1065,13 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="search-fields search-fields-with-destination">
-            <label className="destination-field-label">
-              <span className="field-label-head">
+          <div className="lg-booking-row">
+            <div className="lg-field-cell destination-cell">
+              <label htmlFor="search-destination">
                 <AppIcon name="map-pin" /> Điểm đến / Khu vực
-              </span>
+              </label>
               <select
+                id="search-destination"
                 value={selectedDestination}
                 onChange={(e) => broadcastDestinationChange(e.target.value)}
                 aria-label="Điểm đến du lịch Việt Nam"
@@ -1125,88 +1105,153 @@ export default function HomePage() {
                   )}
                 </optgroup>
               </select>
-            </label>
-            <label>
-              <span className="field-label-head">
+            </div>
+
+            <div className="lg-field-cell">
+              <label htmlFor="search-checkin">
                 <AppIcon name="calendar" /> Nhận phòng
-              </span>
+              </label>
               <input
+                id="search-checkin"
                 type="date"
                 value={criteria.checkIn}
                 min={iso(0)}
-                onChange={(e) =>
-                  setCriteria({ ...criteria, checkIn: e.target.value })
-                }
+                onChange={(e) => handleCheckInChange(e.target.value)}
               />
-            </label>
-            <label>
-              <span className="field-label-head">
+            </div>
+
+            <div className="lg-field-cell">
+              <label htmlFor="search-checkout">
                 <AppIcon name="calendar" /> Trả phòng
-              </span>
+              </label>
               <input
+                id="search-checkout"
                 type="date"
                 value={criteria.checkOut}
-                min={criteria.checkIn}
+                min={addDaysToIso(criteria.checkIn, 1)}
                 onChange={(e) =>
                   setCriteria({ ...criteria, checkOut: e.target.value })
                 }
               />
-            </label>
-            <label>
-              <span className="field-label-head">
+            </div>
+
+            <div className="lg-field-cell">
+              <label htmlFor="search-adults">
                 <AppIcon name="user" /> Người lớn
-              </span>
-              <input
-                type="number"
-                min="1"
-                value={criteria.adults}
-                onChange={(e) =>
-                  setCriteria({ ...criteria, adults: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              <span className="field-label-head">
+              </label>
+              <div className="lg-stepper">
+                <button
+                  type="button"
+                  className="lg-stepper-btn"
+                  aria-label="Bớt 1 khách lớn"
+                  onClick={() => adjustCounter("adults", -1, 1)}
+                >
+                  <AppIcon name="minus" />
+                </button>
+                <input
+                  id="search-adults"
+                  type="number"
+                  min="1"
+                  value={criteria.adults}
+                  onChange={(e) =>
+                    setCriteria({ ...criteria, adults: e.target.value })
+                  }
+                />
+                <button
+                  type="button"
+                  className="lg-stepper-btn"
+                  aria-label="Thêm 1 khách lớn"
+                  onClick={() => adjustCounter("adults", 1, 1)}
+                >
+                  <AppIcon name="plus" />
+                </button>
+              </div>
+            </div>
+
+            <div className="lg-field-cell">
+              <label htmlFor="search-children">
                 <AppIcon name="users" /> Trẻ em
-              </span>
-              <input
-                type="number"
-                min="0"
-                value={criteria.children}
-                onChange={(e) =>
-                  setCriteria({ ...criteria, children: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              <span className="field-label-head">
+              </label>
+              <div className="lg-stepper">
+                <button
+                  type="button"
+                  className="lg-stepper-btn"
+                  aria-label="Bớt 1 khách nhỏ"
+                  onClick={() => adjustCounter("children", -1, 0)}
+                >
+                  <AppIcon name="minus" />
+                </button>
+                <input
+                  id="search-children"
+                  type="number"
+                  min="0"
+                  value={criteria.children}
+                  onChange={(e) =>
+                    setCriteria({ ...criteria, children: e.target.value })
+                  }
+                />
+                <button
+                  type="button"
+                  className="lg-stepper-btn"
+                  aria-label="Thêm 1 khách nhỏ"
+                  onClick={() => adjustCounter("children", 1, 0)}
+                >
+                  <AppIcon name="plus" />
+                </button>
+              </div>
+            </div>
+
+            <div className="lg-field-cell rooms-cell">
+              <label htmlFor="search-rooms">
                 <AppIcon name="bed" /> Số phòng
-              </span>
-              <input
-                type="number"
-                min="1"
-                value={criteria.rooms}
-                onChange={(e) =>
-                  setCriteria({ ...criteria, rooms: e.target.value })
-                }
-              />
-            </label>
-            <button
-              className="primary search-button"
-              disabled={loading}
-              aria-label="Tìm phòng trống"
-            >
-              {loading ? (
-                <>
-                  <span className="spinner" /> Đang kiểm tra
-                </>
-              ) : (
-                <>
-                  <AppIcon name="search" />
-                  <span>Tìm phòng phù hợp</span>
-                </>
-              )}
-            </button>
+              </label>
+              <div className="lg-stepper">
+                <button
+                  type="button"
+                  className="lg-stepper-btn"
+                  aria-label="Bớt 1 căn"
+                  onClick={() => adjustCounter("rooms", -1, 1)}
+                >
+                  <AppIcon name="minus" />
+                </button>
+                <input
+                  id="search-rooms"
+                  type="number"
+                  min="1"
+                  value={criteria.rooms}
+                  onChange={(e) =>
+                    setCriteria({ ...criteria, rooms: e.target.value })
+                  }
+                />
+                <button
+                  type="button"
+                  className="lg-stepper-btn"
+                  aria-label="Thêm 1 căn"
+                  onClick={() => adjustCounter("rooms", 1, 1)}
+                >
+                  <AppIcon name="plus" />
+                </button>
+              </div>
+            </div>
+
+            <div className="lg-field-cell cta-cell">
+              <button
+                className="primary search-button"
+                disabled={loading}
+                aria-label="Tìm phòng trống"
+              >
+                {loading ? (
+                  <>
+                    <span className="spinner" /> Đang kiểm tra
+                  </>
+                ) : (
+                  <>
+                    <AppIcon name="search" />
+                    <span>Tìm phòng phù hợp</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
         <details className="search-advanced">
@@ -1284,7 +1329,244 @@ export default function HomePage() {
         </details>
       </section>
 
-      <section className="guest-trust-strip" aria-label="Cam kết của HotelAI">
+      <section className="content-section" id="suites">
+        <div className="section-heading">
+          <div>
+            <span>
+              {activeDestinationObj
+                ? `TUYỆT TÁC LƯU TRÚ TẠI: ${activeDestinationObj.name.toUpperCase()} · ${activeDestinationObj.province.toUpperCase()}`
+                : "BỘ SƯU TẬP PHÒNG, SUITE & BIỆT THỰ TOÀN QUỐC"}
+            </span>
+            <h2>Kết quả theo thời gian thực</h2>
+          </div>
+          <div className="section-heading-actions">
+            {activeDestinationObj && (
+              <button
+                type="button"
+                className="clear-destination-btn"
+                onClick={() => broadcastDestinationChange("ALL")}
+              >
+                <span>Đang lọc: {activeDestinationObj.name}</span>
+                <AppIcon name="x" />
+              </button>
+            )}
+            <p className="results-counter-pill">
+              <AppIcon name="clock" />
+              <span>
+                {loading
+                  ? "Đang kiểm tra tồn kho trực tiếp…"
+                  : filteredByDestination.length
+                    ? `${filteredByDestination.length} hạng phòng thượng hạng · ${filteredByDestination.reduce((s, o) => s + o.availableRooms, 0)} phòng sẵn sàng`
+                    : "Chọn ngày để bắt đầu"}
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <div className="recommend-bar" data-glass-spotlight="">
+          <div className="recommend-bar-copy">
+            <span className="recommend-icon-badge" aria-hidden="true">
+              <AppIcon name="sparkles" />
+            </span>
+            <div>
+              <small className="recommend-kicker">
+                AI BESPOKE CONCIERGE · XẾP HẠNG ĐA TIÊU CHÍ
+              </small>
+              <strong>
+                {activeDestinationObj
+                  ? `Bạn muốn Quản gia AI tuyển chọn Suite hoàn hảo nhất tại ${activeDestinationObj.name}?`
+                  : "Bạn muốn tìm căn Suite hoàn mỹ nhất chỉ trong một chạm?"}
+              </strong>
+              <span>
+                {" "}
+                Thuật toán AI đối chiếu điểm đến, ngân sách, sức chứa, tiện nghi
+                đặc quyền và chỉ số hài lòng thực tế của khách lưu trú.
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="secondary recommend-trigger"
+            onClick={() => void recommend()}
+            disabled={aiLoading}
+            aria-label="Gợi ý bằng AI"
+          >
+            <AppIcon name="sparkles" />
+            <span>
+              {aiLoading ? "Đang phân tích…" : "Nhờ Quản gia AI gợi ý"}
+            </span>
+          </button>
+        </div>
+
+        <div className="room-grid" aria-live="polite">
+          {loading &&
+            Array.from({ length: 3 }).map((_, index) => (
+              <div className="room-skeleton" key={index} />
+            ))}
+          {filteredByDestination.map((option, index) => {
+            const primaryDestination = resolveDestinationForRoom(option, index);
+            const propertyBadgeText =
+              option.propertyName || primaryDestination.propertyTitle;
+            const landmarkBadgeText =
+              option.landmark || primaryDestination.landmark;
+
+            return (
+              <article
+                className="room-card"
+                key={option.roomTypeId}
+                data-glass-spotlight=""
+                data-reveal=""
+                style={
+                  {
+                    "--reveal-delay": `${Math.min(index, 5) * 45}ms`,
+                  } as React.CSSProperties
+                }
+              >
+                <div
+                  className="room-visual"
+                  style={{
+                    backgroundImage: option.imageUrl
+                      ? `linear-gradient(155deg, rgba(4, 21, 18, 0.22) 0%, rgba(4, 24, 20, 0.45) 52%, rgba(3, 18, 15, 0.88) 100%), url(${option.imageUrl}), url(/images/hotelai-room-atlas-v1.png)`
+                      : `linear-gradient(155deg, rgba(4, 21, 18, 0.22) 0%, rgba(4, 24, 20, 0.45) 52%, rgba(3, 18, 15, 0.84) 100%), url(/images/hotelai-room-atlas-v1.png)`,
+                    backgroundSize: option.imageUrl
+                      ? "cover, cover, 300% 100%"
+                      : "cover, 300% 100%",
+                    backgroundPosition: option.imageUrl
+                      ? `center, center, ${(index % 3) * 50}% center`
+                      : `center, ${(index % 3) * 50}% center`,
+                  }}
+                >
+                  <div className="room-visual-top">
+                    <span className="room-code-badge">
+                      <AppIcon name="diamond" /> {option.code || option.name}
+                    </span>
+                    <small className="room-capacity-pill">
+                      <AppIcon name="users" /> {option.maxAdults} người lớn
+                      {option.maxChildren > 0
+                        ? ` · ${option.maxChildren} trẻ em`
+                        : ""}
+                    </small>
+                  </div>
+                  <div className="room-visual-bottom">
+                    <span className="room-location-badge">
+                      <AppIcon name="map-pin" />
+                      HotelAI{" "}
+                      {option.destinationName || primaryDestination.name} ·{" "}
+                      {landmarkBadgeText}
+                    </span>
+                    <strong className="room-availability-pill">
+                      <i /> Còn {option.availableRooms} phòng trống
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="room-copy">
+                  <div className="room-copy-badges">
+                    <span className="room-property-tag">
+                      <AppIcon name="crown" /> {propertyBadgeText}
+                    </span>
+                    {(option.styleTag || primaryDestination.styleTag) && (
+                      <span className="room-style-tag">
+                        {option.styleTag || primaryDestination.styleTag}
+                      </span>
+                    )}
+                    {option.recommendationScore !== undefined && (
+                      <span className="ai-score">
+                        <AppIcon name="sparkles" />
+                        <span>
+                          Phù hợp {Math.round(option.recommendationScore * 100)}
+                          %
+                        </span>
+                        <span className="sr-only">
+                          AI phù hợp{" "}
+                          {Math.round(option.recommendationScore * 100)}%
+                        </span>
+                      </span>
+                    )}
+                  </div>
+
+                  <h3>{option.name}</h3>
+                  <p>{option.description}</p>
+
+                  <div className="room-luxury-highlights">
+                    <span>
+                      <AppIcon name="shield" /> Giữ phòng 15 phút
+                    </span>
+                    <span>
+                      <AppIcon name="sparkles" /> Quản gia 24/7
+                    </span>
+                  </div>
+
+                  <ul>
+                    {option.amenities.map((item) => (
+                      <li key={item}>
+                        <AppIcon name="check" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <small>{option.cancellationPolicy}</small>
+                  {option.reasons && (
+                    <p className="ai-reasons">
+                      <AppIcon name="sparkles" />{" "}
+                      <span>{option.reasons.map(viAiReason).join(" · ")}</span>
+                    </p>
+                  )}
+                </div>
+
+                <div className="room-price">
+                  <div>
+                    <span>
+                      Tổng chi phí kỳ nghỉ ({stayNights} đêm · trọn gói)
+                    </span>
+                    <strong>{money(option.totalAmount)}</strong>
+                    <small>
+                      Đã bao gồm thuế {money(option.taxAmount)} &amp; phí phục
+                      vụ {money(option.serviceFee)}
+                    </small>
+                  </div>
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={() => beginBooking(option)}
+                  >
+                    <span>Chọn phòng này</span>
+                    <AppIcon name="arrow" />
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+          {!loading && !filteredByDestination.length && !error && (
+            <div className="empty-results">
+              <span className="empty-results-icon" aria-hidden="true">
+                <AppIcon name="search" />
+              </span>
+              <h3>Chưa tìm thấy hạng phòng phù hợp tại khu vực này</h3>
+              <p>
+                Hãy thử chuyển sang &ldquo;Toàn quốc · Tất cả 10 điểm
+                đến&rdquo;, thay đổi ngày lưu trú hoặc mở rộng khoảng ngân sách.
+              </p>
+              {selectedDestination !== "ALL" && (
+                <button
+                  type="button"
+                  className="secondary"
+                  style={{ marginTop: "14px" }}
+                  onClick={() => broadcastDestinationChange("ALL")}
+                >
+                  Xem tất cả 10 điểm đến Việt Nam
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section
+        className="guest-trust-strip"
+        data-reveal=""
+        aria-label="Cam kết của HotelAI"
+      >
         <article>
           <span className="trust-medallion">
             <AppIcon name="shield" />
@@ -1376,18 +1658,26 @@ export default function HomePage() {
             const destAvailableCount =
               liveDest?.availableRooms ??
               matchingRooms.reduce((sum, item) => sum + item.availableRooms, 0);
-            const destLowestPrice =
-              liveDest?.minNightlyPrice ??
-              (matchingRooms.length
-                ? Math.min(...matchingRooms.map((item) => item.totalAmount))
-                : null);
+            const destLowestPrice = commercialMinPrice([
+              liveDest?.minNightlyPrice != null
+                ? Number(liveDest.minNightlyPrice)
+                : null,
+              ...matchingRooms.map((item) => item.totalAmount),
+            ]);
             const isSelected = selectedDestination === dest.code;
 
             return (
               <article
                 key={dest.code}
                 className={`destination-card ${dest.featured && selectedRegion === "ALL" ? "destination-card-featured" : ""} ${isSelected ? "active" : ""}`}
-                style={{ backgroundImage: dest.gradient }}
+                style={
+                  {
+                    backgroundImage: dest.gradient,
+                    "--reveal-delay": `${Math.min(idx, 5) * 40}ms`,
+                  } as React.CSSProperties
+                }
+                data-glass-spotlight=""
+                data-reveal=""
                 onClick={() =>
                   selectDestinationAndScroll(isSelected ? "ALL" : dest.code)
                 }
@@ -1432,7 +1722,7 @@ export default function HomePage() {
                   <div className="destination-card-foot">
                     <span>
                       {destLowestPrice
-                        ? `Từ ${money(Number(destLowestPrice))} / đêm`
+                        ? `Từ ${money(destLowestPrice)} / đêm`
                         : liveDest?.landmark ?? dest.landmark}
                     </span>
                     <button
@@ -1457,230 +1747,6 @@ export default function HomePage() {
               </article>
             );
           })}
-        </div>
-      </section>
-
-      <section className="content-section" id="suites">
-        <div className="section-heading">
-          <div>
-            <span>
-              {activeDestinationObj
-                ? `TUYỆT TÁC LƯU TRÚ TẠI: ${activeDestinationObj.name.toUpperCase()} · ${activeDestinationObj.province.toUpperCase()}`
-                : "BỘ SƯU TẬP PHÒNG, SUITE & BIỆT THỰ TOÀN QUỐC"}
-            </span>
-            <h2>Kết quả theo thời gian thực</h2>
-          </div>
-          <div className="section-heading-actions">
-            {activeDestinationObj && (
-              <button
-                type="button"
-                className="clear-destination-btn"
-                onClick={() => broadcastDestinationChange("ALL")}
-              >
-                <span>Đang lọc: {activeDestinationObj.name}</span>
-                <AppIcon name="x" />
-              </button>
-            )}
-            <p className="results-counter-pill">
-              <AppIcon name="clock" />
-              <span>
-                {loading
-                  ? "Đang kiểm tra tồn kho trực tiếp…"
-                  : filteredByDestination.length
-                    ? `${filteredByDestination.length} hạng phòng thượng hạng · ${filteredByDestination.reduce((s, o) => s + o.availableRooms, 0)} phòng sẵn sàng`
-                    : "Chọn ngày để bắt đầu"}
-              </span>
-            </p>
-          </div>
-        </div>
-
-        <div className="recommend-bar">
-          <div className="recommend-bar-copy">
-            <span className="recommend-icon-badge" aria-hidden="true">
-              <AppIcon name="sparkles" />
-            </span>
-            <div>
-              <small className="recommend-kicker">
-                AI BESPOKE CONCIERGE · XẾP HẠNG ĐA TIÊU CHÍ
-              </small>
-              <strong>
-                {activeDestinationObj
-                  ? `Bạn muốn Quản gia AI tuyển chọn Suite hoàn hảo nhất tại ${activeDestinationObj.name}?`
-                  : "Bạn muốn tìm căn Suite hoàn mỹ nhất chỉ trong một chạm?"}
-              </strong>
-              <span>
-                {" "}
-                Thuật toán AI đối chiếu điểm đến, ngân sách, sức chứa, tiện nghi
-                đặc quyền và chỉ số hài lòng thực tế của khách lưu trú.
-              </span>
-            </div>
-          </div>
-          <button
-            className="secondary recommend-trigger"
-            onClick={() => void recommend()}
-            disabled={aiLoading}
-            aria-label="Gợi ý bằng AI"
-          >
-            <AppIcon name="sparkles" />
-            <span>
-              {aiLoading ? "Đang phân tích…" : "Nhờ Quản gia AI gợi ý"}
-            </span>
-          </button>
-        </div>
-
-        <div className="room-grid" aria-live="polite">
-          {loading &&
-            Array.from({ length: 3 }).map((_, index) => (
-              <div className="room-skeleton" key={index} />
-            ))}
-          {filteredByDestination.map((option, index) => {
-            const primaryDestination = resolveDestinationForRoom(option, index);
-            const propertyBadgeText =
-              option.propertyName || primaryDestination.propertyTitle;
-            const landmarkBadgeText =
-              option.landmark || primaryDestination.landmark;
-
-            return (
-              <article className="room-card" key={option.roomTypeId}>
-                <div
-                  className="room-visual"
-                  style={{
-                    backgroundImage: option.imageUrl
-                      ? `linear-gradient(155deg, rgba(4, 21, 18, 0.22) 0%, rgba(4, 24, 20, 0.45) 52%, rgba(3, 18, 15, 0.88) 100%), url(${option.imageUrl}), url(/images/hotelai-room-atlas-v1.png)`
-                      : `linear-gradient(155deg, rgba(4, 21, 18, 0.22) 0%, rgba(4, 24, 20, 0.45) 52%, rgba(3, 18, 15, 0.84) 100%), url(/images/hotelai-room-atlas-v1.png)`,
-                    backgroundSize: option.imageUrl
-                      ? "cover, cover, 300% 100%"
-                      : "cover, 300% 100%",
-                    backgroundPosition: option.imageUrl
-                      ? `center, center, ${(index % 3) * 50}% center`
-                      : `center, ${(index % 3) * 50}% center`,
-                  }}
-                >
-                  <div className="room-visual-top">
-                    <span className="room-code-badge">
-                      <AppIcon name="diamond" /> {option.code || option.name}
-                    </span>
-                    <small className="room-capacity-pill">
-                      <AppIcon name="users" /> {option.maxAdults} người lớn
-                      {option.maxChildren > 0
-                        ? ` · ${option.maxChildren} trẻ em`
-                        : ""}
-                    </small>
-                  </div>
-                  <div className="room-visual-bottom">
-                    <span className="room-location-badge">
-                      <AppIcon name="map-pin" />
-                      HotelAI{" "}
-                      {option.destinationName || primaryDestination.name} ·{" "}
-                      {landmarkBadgeText}
-                    </span>
-                    <strong className="room-availability-pill">
-                      <i /> Còn {option.availableRooms} phòng trống
-                    </strong>
-                  </div>
-                </div>
-
-                <div className="room-copy">
-                  <div className="room-copy-badges">
-                    <span className="room-property-tag">
-                      <AppIcon name="crown" /> {propertyBadgeText}
-                    </span>
-                    {(option.styleTag || primaryDestination.styleTag) && (
-                      <span className="room-style-tag">
-                        {option.styleTag || primaryDestination.styleTag}
-                      </span>
-                    )}
-                    {option.recommendationScore !== undefined && (
-                      <span className="ai-score">
-                        <AppIcon name="sparkles" />
-                        <span>
-                          Phù hợp {Math.round(option.recommendationScore * 100)}
-                          %
-                        </span>
-                        <span className="sr-only">
-                          AI phù hợp{" "}
-                          {Math.round(option.recommendationScore * 100)}%
-                        </span>
-                      </span>
-                    )}
-                  </div>
-
-                  <h3>{option.name}</h3>
-                  <p>{option.description}</p>
-
-                  <div className="room-luxury-highlights">
-                    <span>
-                      <AppIcon name="shield" /> Giữ phòng 15 phút
-                    </span>
-                    <span>
-                      <AppIcon name="sparkles" /> Quản gia 24/7
-                    </span>
-                    <span>
-                      <AppIcon name="sun" /> Trà chào mừng VIP
-                    </span>
-                  </div>
-
-                  <ul>
-                    {option.amenities.map((item) => (
-                      <li key={item}>
-                        <AppIcon name="check" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <small>{option.cancellationPolicy}</small>
-                  {option.reasons && (
-                    <p className="ai-reasons">
-                      <AppIcon name="sparkles" />{" "}
-                      <span>{option.reasons.map(viAiReason).join(" · ")}</span>
-                    </p>
-                  )}
-                </div>
-
-                <div className="room-price">
-                  <div>
-                    <span>
-                      Tổng chi phí kỳ nghỉ ({stayNights} đêm · trọn gói)
-                    </span>
-                    <strong>{money(option.totalAmount)}</strong>
-                    <small>
-                      Đã bao gồm thuế {money(option.taxAmount)} &amp; phí phục
-                      vụ {money(option.serviceFee)}
-                    </small>
-                  </div>
-                  <button
-                    className="primary"
-                    onClick={() => beginBooking(option)}
-                  >
-                    <span>Chọn phòng này</span>
-                    <AppIcon name="arrow" />
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-          {!loading && !filteredByDestination.length && !error && (
-            <div className="empty-results">
-              <span className="empty-results-icon" aria-hidden="true">
-                <AppIcon name="search" />
-              </span>
-              <h3>Chưa tìm thấy hạng phòng phù hợp tại khu vực này</h3>
-              <p>
-                Hãy thử chuyển sang &ldquo;Toàn quốc · Tất cả 10 điểm
-                đến&rdquo;, thay đổi ngày lưu trú hoặc mở rộng khoảng ngân sách.
-              </p>
-              {selectedDestination !== "ALL" && (
-                <button
-                  type="button"
-                  className="secondary"
-                  style={{ marginTop: "14px" }}
-                  onClick={() => broadcastDestinationChange("ALL")}
-                >
-                  Xem tất cả 10 điểm đến Việt Nam
-                </button>
-              )}
-            </div>
-          )}
         </div>
       </section>
 

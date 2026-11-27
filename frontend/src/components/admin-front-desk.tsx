@@ -1,6 +1,7 @@
 "use client";
 
 import { api, ApiRequestError } from "@/lib/api";
+import { AppIcon } from "@/components/app-icon";
 import { AdminStayActions } from "@/components/admin-stay-actions";
 import type {
   Booking,
@@ -1023,7 +1024,8 @@ export function AdminFrontDesk() {
             <div className="modal-heading">
               <div>
                 <span>
-                  THỦ TỤC NHẬN PHÒNG · 📍{" "}
+                  THỦ TỤC NHẬN PHÒNG ·{" "}
+                  <AppIcon name="map-pin" className="inline-pin-icon" />{" "}
                   {checkInDraft.booking.propertyName ?? "HotelAI Phú Quốc"}
                 </span>
                 <h2>{checkInDraft.booking.bookingCode}</h2>
@@ -1221,7 +1223,8 @@ export function AdminFrontDesk() {
                     </strong>
                     <br />
                     <small>
-                      📍 {booking.propertyName ?? "HotelAI Phú Quốc"} ·{" "}
+                      <AppIcon name="map-pin" className="inline-pin-icon" />
+                      {booking.propertyName ?? "HotelAI Phú Quốc"} ·{" "}
                       {booking.destinationName ?? "Phú Quốc"}
                     </small>
                   </td>

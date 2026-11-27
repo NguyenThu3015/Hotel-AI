@@ -1,48 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap");
-
-:root {
-  --ink-950: #041512;
-  --ink-900: #07211c;
-  --ink-800: #10352e;
-  --ink-700: #1e4b42;
-  --ink-600: #3d645c;
-  --ink-500: #5e7b74;
-  --ink-300: #a8bbb6;
-  --ink-200: #d2ddda;
-  --ink-100: #e7eeec;
-  --ink-50: #f3f6f4;
-  --emerald: #0b6453;
-  --emerald-bright: #118a70;
-  --emerald-soft: #dff3ec;
-  --gold: #c99b3b;
-  --gold-bright: #f2cf83;
-  --gold-soft: #fbf3df;
-  --ivory: #f8f5ee;
-  --paper: #fffefa;
-  --white: #ffffff;
-  --danger: #c94848;
-  --danger-soft: #fff0ed;
-  --warning: #b7791f;
-  --warning-soft: #fff7df;
-  --info: #286da8;
-  --info-soft: #edf6ff;
-  --line: rgba(16, 54, 47, 0.12);
-  --line-strong: rgba(16, 54, 47, 0.22);
-  --shadow-xs: 0 4px 14px rgba(4, 21, 18, 0.05);
-  --shadow-sm: 0 12px 36px rgba(4, 21, 18, 0.08);
-  --shadow-md: 0 24px 68px rgba(4, 21, 18, 0.14);
-  --shadow-lg: 0 38px 110px rgba(3, 18, 15, 0.24);
-  --radius-sm: 10px;
-  --radius: 16px;
-  --radius-lg: 24px;
-  --radius-xl: 34px;
-  --header-height: 82px;
-  --sidebar-width: 286px;
-  --font-sans: "Be Vietnam Pro", "Segoe UI Variable", "Segoe UI", Arial,
-    sans-serif;
-  --font-display: "Cormorant Garamond", "Segoe UI Variable Display",
-    "Be Vietnam Pro", Georgia, serif;
-}
+/* Legacy layout & component rules — tokens & Liquid Glass surfaces live in src/styles/*.css */
 
 * {
   box-sizing: border-box;

@@ -1,6 +1,7 @@
 "use client";
 
 import { api, ApiRequestError } from "@/lib/api";
+import { AppIcon } from "@/components/app-icon";
 import { useAuth } from "@/components/auth-provider";
 import type {
   DestinationCatalogItem,
@@ -293,7 +294,8 @@ export function AdminOperations() {
                   <div>
                     <strong>{task.note || "Dọn và kiểm tra phòng"}</strong>
                     <p>
-                      📍 {roomInfo?.destinationName ?? "Phú Quốc"} ·{" "}
+                      <AppIcon name="map-pin" className="inline-pin-icon" />
+                      {roomInfo?.destinationName ?? "Phú Quốc"} ·{" "}
                       {viLabel(task.priority)} · {viLabel(task.status)}
                     </p>
                   </div>
@@ -373,7 +375,8 @@ export function AdminOperations() {
                   <div>
                     <strong>{item.title}</strong>
                     <p>
-                      📍 {roomInfo?.destinationName ?? "Phú Quốc"} ·{" "}
+                      <AppIcon name="map-pin" className="inline-pin-icon" />
+                      {roomInfo?.destinationName ?? "Phú Quốc"} ·{" "}
                       {viLabel(item.severity)} · {viLabel(item.status)}
                     </p>
                   </div>

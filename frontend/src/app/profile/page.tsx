@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/components/auth-provider";
+import { AppIcon } from "@/components/app-icon";
 import { api } from "@/lib/api";
 import type { PageResponse } from "@/lib/types";
 import { FormEvent, useEffect, useState } from "react";
@@ -96,13 +97,20 @@ export default function ProfilePage() {
     <section className="content-section narrow-section">
       <div className="section-heading">
         <div>
-          <span>TÀI KHOẢN</span>
+          <span>TÀI KHOẢN &amp; ĐẶC QUYỀN</span>
           <h1>Hồ sơ cá nhân</h1>
         </div>
       </div>
       <div className="profile-grid">
-        <form className="panel form-grid" onSubmit={save}>
-          <h2>Thông tin liên hệ</h2>
+        <form
+          className="panel form-grid"
+          data-glass-spotlight=""
+          onSubmit={save}
+        >
+          <div>
+            <span className="panel-kicker">ĐỊNH DANH</span>
+            <h2>Thông tin liên hệ</h2>
+          </div>
           <label>
             Email
             <input value={auth.user.email} disabled />
@@ -122,10 +130,16 @@ export default function ProfilePage() {
               onChange={(event) => setPhone(event.target.value)}
             />
           </label>
-          <button className="primary">Lưu thay đổi</button>
+          <button className="primary">
+            <AppIcon name="check" />
+            <span>Lưu thay đổi</span>
+          </button>
         </form>
-        <section className="panel form-grid">
-          <h2>Xác minh email</h2>
+        <section className="panel form-grid" data-glass-spotlight="">
+          <div>
+            <span className="panel-kicker">BẢO CHỨNG TÀI KHOẢN</span>
+            <h2>Xác minh email</h2>
+          </div>
           <p className="muted">
             Trạng thái:{" "}
             <strong>
@@ -133,16 +147,21 @@ export default function ProfilePage() {
             </strong>
           </p>
           <p className="muted">
-            Email được xác minh bằng OTP trong lúc đăng ký. Mọi phiên đăng nhập đều gắn với
-            tài khoản đã kích hoạt.
+            Email được xác minh bằng OTP trong lúc đăng ký. Mọi phiên đăng nhập
+            đều gắn với tài khoản đã kích hoạt an toàn.
           </p>
         </section>
-        <form className="panel form-grid password-panel" onSubmit={changePassword}>
+        <form
+          className="panel form-grid password-panel"
+          data-glass-spotlight=""
+          onSubmit={changePassword}
+        >
           <div>
             <span className="panel-kicker">BẢO MẬT</span>
             <h2>Đổi mật khẩu</h2>
             <p className="muted">
-              Sau khi đổi, hệ thống sẽ đăng xuất các thiết bị để bảo vệ tài khoản.
+              Sau khi đổi, hệ thống sẽ đăng xuất các thiết bị để bảo vệ tài
+              khoản.
             </p>
           </div>
           <label>
@@ -153,7 +172,10 @@ export default function ProfilePage() {
               required
               value={passwords.currentPassword}
               onChange={(event) =>
-                setPasswords({ ...passwords, currentPassword: event.target.value })
+                setPasswords({
+                  ...passwords,
+                  currentPassword: event.target.value,
+                })
               }
             />
           </label>
@@ -179,7 +201,10 @@ export default function ProfilePage() {
               required
               value={passwords.confirmPassword}
               onChange={(event) =>
-                setPasswords({ ...passwords, confirmPassword: event.target.value })
+                setPasswords({
+                  ...passwords,
+                  confirmPassword: event.target.value,
+                })
               }
             />
           </label>
@@ -188,7 +213,10 @@ export default function ProfilePage() {
           </button>
         </form>
       </div>
-      <section className="panel notification-panel">
+      <section
+        className="panel notification-panel notifications-glass-panel"
+        data-glass-spotlight=""
+      >
         <div className="panel-heading">
           <div>
             <span>THÔNG BÁO</span>
@@ -199,6 +227,7 @@ export default function ProfilePage() {
         <div className="simple-list">
           {notifications.map((item) => (
             <button
+              type="button"
               className={item.readAt ? "notification read" : "notification"}
               key={item.id}
               onClick={() => {
